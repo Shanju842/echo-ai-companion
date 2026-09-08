@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<title>ECHO — Context-Aware AI Companion</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #07090d;
+  --panel: #10141b;
+  --panel2: #151a23;
+  --text: #f4f7fb;
+  --muted: #8f9aaa;
+  --line: rgba(255,255,255,.09);
+  --accent: #9eff5b;
+  --accent2: #d5ffb9;
+  --danger: #ff7777;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "SF Pro Text",
+    Inter,
+    Arial,
+    sans-serif;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100vh;
+  margin: auto;
+  padding: env(safe-area-inset-top) 18px env(safe-area-inset-bottom);
+  position: relative;
+}
+
+/* HEADER */
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 2px 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #eaffdf;
+  color: #0b1008;
+  font-weight: 900;
+  font-size: 17px;
+  box-shadow: 0 0 30px rgba(158,255,91,.12);
+}
+
+.brand-text h1 {
+  font-size: 18px;
+  letter-spacing: .14em;
+  font-weight: 800;
+}
+
+.brand-text p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.035);
+  border-radius: 100px;
+  padding: 8px 11px;
+  font-size: 11px;
+  color: #c8d0da;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* HERO */
+
+.hero {
+  padding: 30px 2px 18px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: 10px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.hero h2 {
+  font-size: clamp(34px, 9vw, 48px);
+  line-height: .98;
+  letter-spacing: -.045em;
+  max-width: 450px;
+}
+
+.hero h2 span {
+  color: var(--muted);
+}
+
+.hero p {
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 14px;
+  max-width: 420px;
+}
+
+/* VOICE */
+
+.voice-card {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(158,255,91,.09), transparent 42%),
+    var(--panel);
+  border-radius: 28px;
+  padding: 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.voice-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -20% -70px;
+  height: 130px;
+  background: rgba(158,255,91,.035);
+  filter: blur(30px);
+}
+
+.voice-state {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+.voice-orb {
+  width: 106px;
+  height: 106px;
+  margin: auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #101810;
+  border: 1px solid rgba(158,255,91,.35);
+  box-shadow:
+    0 0 0 12px rgba(158,255,91,.025),
+    0 0 0 25px rgba(158,255,91,.012);
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  transition: .25s ease;
+}
+
+.voice-orb:hover {
+  transform: scale(1.04);
+}
+
+.voice-orb.active {
+  animation: pulse 1.25s infinite;
+}
+
+.mic {
+  width: 23px;
+  height: 33px;
+  border: 3px solid var(--accent);
+  border-radius: 16px;
+  position: relative;
+}
+
+.mic::before {
+  content: "";
+  position: absolute;
+  width: 38px;
+  height: 44px;
+  border: 3px solid var(--accent);
+  border-top: 0;
+  border-radius: 0 0 24px 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 15px;
+}
+
+.mic::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 12px;
+  background: var(--accent);
+  left: 50%;
+  transform: translateX(-50%);
+  top: 45px;
+}
+
+.voice-command {
+  margin-top: 25px;
+  min-height: 24px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.voice-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* QUICK ACTIONS */
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 28px 2px 12px;
+}
+
+.section-title h3 {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.section-title span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.action {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  min-height: 92px;
+  border-radius: 20px;
+  padding: 17px;
+  text-align: left;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.action:hover {
+  background: var(--panel2);
+  transform: translateY(-2px);
+  border-color: rgba(158,255,91,.25);
+}
+
+.action-icon {
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+.action strong {
+  display: block;
+  font-size: 14px;
+}
+
+.action small {
+  color: var(--muted);
+  display: block;
+  margin-top: 5px;
+  line-height: 1.3;
+}
+
+/* MEMORY */
+
+.memory {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 17px;
+  background: var(--panel);
+}
+
+.memory-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.memory-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #1b222c;
+  font-size: 21px;
+}
+
+.memory-info {
+  flex: 1;
+}
+
+.memory-info strong {
+  font-size: 14px;
+}
+
+.memory-info p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.memory-badge {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* BOTTOM */
+
+.bottom-space {
+  height: 30px;
+}
+
+footer {
+  color: #596270;
+  text-align: center;
+  font-size: 10px;
+  padding: 10px 0 28px;
+}
+
+/* MODAL */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(16px);
+  z-index: 20;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.sheet {
+  width: min(520px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #0e1218;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 30px 30px 0 0;
+  padding: 20px;
+  animation: slideUp .25s ease;
+}
+
+.handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 10px;
+  background: #39414c;
+  margin: 0 auto 20px;
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 17px;
+}
+
+.sheet-header h2 {
+  font-size: 21px;
+}
+
+.close {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #171c24;
+  color: white;
+  cursor: pointer;
+}
+
+/* CAMERA */
+
+.camera {
+  width: 100%;
+  height: 330px;
+  background: #050607;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--line);
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.camera-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 30px;
+}
+
+.camera-placeholder .cam-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.camera-placeholder p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scan-frame {
+  position: absolute;
+  inset: 48px 35px;
+  border: 1px solid rgba(158,255,91,.55);
+  border-radius: 24px;
+  display: none;
+}
+
+.scan-frame::before,
+.scan-frame::after {
+  content: "";
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.scan-frame::before {
+  left: -1px;
+  top: -1px;
+  border-width: 3px 0 0 3px;
+  border-radius: 10px 0 0 0;
+}
+
+.scan-frame::after {
+  right: -1px;
+  bottom: -1px;
+  border-width: 0 3px 3px 0;
+  border-radius: 0 0 10px 0;
+}
+
+.camera-label {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  background: rgba(0,0,0,.55);
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  color: #d8e0e8;
+  backdrop-filter: blur(8px);
+}
+
+.camera-controls {
+  display: flex;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.primary,
+.secondary {
+  flex: 1;
+  border-radius: 15px;
+  padding: 14px;
+  cursor: pointer;
+  font-weight: 700;
+  border: 1px solid var(--line);
+}
+
+.primary {
+  background: var(--accent);
+  color: #071006;
+  border-color: var(--accent);
+}
+
+.secondary {
+  background: #151a22;
+  color: white;
+}
+
+.result {
+  margin-top: 15px;
+  border: 1px solid rgba(158,255,91,.22);
+  background: rgba(158,255,91,.045);
+  border-radius: 19px;
+  padding: 16px;
+  display: none;
+}
+
+.result.show {
+  display: block;
+  animation: fade .3s ease;
+}
+
+.result-label {
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.result h3 {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.result p {
+  color: #b8c1cd;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 7px;
+}
+
+/* MEMORY MODAL */
+
+.memory-object {
+  background: #151a22;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+}
+
+.object-symbol {
+  font-size: 58px;
+}
+
+.memory-object h3 {
+  margin-top: 10px;
+}
+
+.memory-object p {
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.memory-timeline {
+  margin-top: 16px;
+  border-left: 1px solid #323a46;
+  padding-left: 15px;
+}
+
+.timeline-item {
+  margin-bottom: 16px;
+}
+
+.timeline-item strong {
+  font-size: 13px;
+}
+
+.timeline-item p {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+/* FIND */
+
+.find-hero {
+  text-align: center;
+  padding: 12px 0 18px;
+}
+
+.find-orb {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 15px;
+  display: grid;
+  place-items: center;
+  background: #171d25;
+  border: 1px solid rgba(158,255,91,.3);
+  border-radius: 50%;
+  font-size: 36px;
+}
+
+.direction {
+  margin-top: 17px;
+  padding: 17px;
+  background: #151a22;
+  border-radius: 18px;
+  text-align: center;
+}
+
+.direction strong {
+  font-size: 18px;
+}
+
+.direction p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* GUIDE */
+
+.route {
+  background: #121820;
+  border-radius: 22px;
+  padding: 20px;
+  border: 1px solid var(--line);
+}
+
+.route-map {
+  height: 220px;
+  border-radius: 17px;
+  background:
+    linear-gradient(32deg, transparent 48%, rgba(255,255,255,.08) 49%, rgba(255,255,255,.08) 51%, transparent 52%),
+    linear-gradient(-25deg, transparent 48%, rgba(255,255,255,.07) 49%, rgba(255,255,255,.07) 51%, transparent 52%),
+    #0b0f14;
+  position: relative;
+  overflow: hidden;
+}
+
+.route-line {
+  position: absolute;
+  width: 4px;
+  height: 160px;
+  background: var(--accent);
+  transform: rotate(42deg);
+  left: 48%;
+  top: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(158,255,91,.3);
+}
+
+.map-pin {
+  position: absolute;
+  font-size: 25px;
+}
+
+.pin-a {
+  left: 25%;
+  bottom: 25px;
+}
+
+.pin-b {
+  right: 22%;
+  top: 25px;
+}
+
+.route-info {
+  margin-top: 14px;
+}
+
+.route-info strong {
+  font-size: 15px;
+}
+
+.route-info p {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* ACCESSIBILITY */
+
+.accessibility-note {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.accessibility-note span {
+  font-size: 21px;
+}
+
+.accessibility-note p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@keyframes pulse {
+  0%,100% {
+    box-shadow:
+      0 0 0 12px rgba(158,255,91,.025),
+      0 0 0 25px rgba(158,255,91,.012);
+  }
+  50% {
+    box-shadow:
+      0 0 0 22px rgba(158,255,91,.04),
+      0 0 0 45px rgba(158,255,91,.015);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 700px) {
+  body {
+    padding: 30px 0;
+  }
+
+  .app {
+    min-height: auto;
+    border: 1px solid var(--line);
+    border-radius: 32px;
+    overflow: hidden;
+    background: #090c11;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header>
+    <div class="brand">
+      <div class="logo">E</div>
+      <div class="brand-text">
+        <h1>ECHO</h1>
+        <p>CONTEXT-AWARE COMPANION</p>
+      </div>
+    </div>
+
+    <div class="status">
+      <span class="status-dot"></span>
+      READY
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <div class="eyebrow">Independent living</div>
+
+      <h2>
+        Ask. See.<br>
+        <span>Understand.</span>
+      </h2>
+
+      <p>
+        A voice-first AI companion that helps you understand
+        the world around you, remember important things,
+        and get where you need to go.
+      </p>
+    </section>
+
+    <!-- VOICE -->
+
+    <section class="voice-card">
+
+      <div class="voice-state" id="voiceState">
+        ECHO is ready to listen
+      </div>
+
+      <button class="voice-orb" id="voiceButton" aria-label="Talk to ECHO">
+        <div class="mic"></div>
+      </button>
+
+      <div class="voice-command" id="voiceCommand">
+        “Hey ECHO…”
+      </div>
+
+      <div class="voice-hint">
+        Tap and speak naturally
+      </div>
+
+    </section>
+
+    <!-- ACTIONS -->
+
+    <div class="section-title">
+      <h3>What can ECHO help with?</h3>
+      <span>Voice-first</span>
+    </div>
+
+    <section class="actions">
+
+      <button class="action" onclick="openSee()">
+        <div class="action-icon">👁️</div>
+        <strong>See & Understand</strong>
+        <small>Understand what's around you</small>
+      </button>
+
+      <button class="action" onclick="openMemory()">
+        <div class="action-icon">🧠</div>
+        <strong>Remember</strong>
+        <small>Remember where things were seen</small>
+      </button>
+
+      <button class="action" onclick="openRead()">
+        <div class="action-icon">📖</div>
+        <strong>Read & Translate</strong>
+        <small>Read visible text aloud</small>
+      </button>
+
+      <button class="action" onclick="openGuide()">
+        <div class="action-icon">📍</div>
+        <strong>Guide</strong>
+        <small>Get simple voice directions</small>
+      </button>
+
+    </section>
+
+    <!-- MEMORY PREVIEW -->
+
+    <div class="section-title">
+      <h3>Visual memory</h3>
+      <span>1 remembered item</span>
+    </div>
+
+    <section class="memory">
+      <div class="memory-row">
+
+        <div class="memory-icon">👓</div>
+
+        <div class="memory-info">
+          <strong>My glasses</strong>
+          <p>Last seen on the desk · 6:42 PM</p>
+        </div>
+
+        <div class="memory-badge">
+          REMEMBERED
+        </div>
+
+      </div>
+    </section>
+
+    <div class="accessibility-note">
+      <span>♿</span>
+      <p>
+        Designed for simple, voice-first interaction.
+        Large controls and spoken responses reduce dependence
+        on complex visual interfaces.
+      </p>
+    </div>
+
+    <div class="bottom-space"></div>
+
+  </main>
+
+  <footer>
+    ECHO · AI COMPANION FOR INDEPENDENT LIVING
+  </footer>
+
+</div>
+
+
+<!-- CAMERA MODAL -->
+
+<div class="modal" id="seeModal">
+  <div class="sheet">
+
+    <div class="handle"></div>
+
+    <div class="sheet-header">
+      <h2>See & Understand</h2>
+      <button class="close" onclick="closeModal('seeModal')">×</button>
+    </div>
+
+    <div class="camera">
+
+      <video id="video" autoplay playsinline></video>
+
+      <div class="camera-placeholder" id="cameraPlaceholder">
+        <div>
+          <div class="cam-icon">📷</div>
+          <p>
+            ECHO can use the camera to understand
+            what is around you.
+          </p>
+        </div>
+      </div>
+
+      <div class="scan-frame" id="scanFrame"></div>
+
+      <div class="camera-label">
+        ECHO VISION
+      </div>
+
+    </div>
+
+    <div class="camera-controls">
+      <button class="secondary" onclick="startCamera()">
+        OPEN CAMERA
+      </button>
+
+      <button class="primary" onclick="analyzeScene()">
+        ANALYZE
+      </button>
+    </div>
+
+    <div class="result" id="seeResult">
+      <div class="result-label">ECHO UNDERSTANDS</div>
+      <h3>Table and personal items detected</h3>
+      <p>
+        I can see a desk surface with a laptop,
+        a pair of glasses and several small objects.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- MEMORY MODAL -->
+
+<div class="modal" id="memoryModal">
+  <div class="sheet">
+
+    <div class="handle"></div>
+
+    <div class="sheet-header">
+      <h2>Visual Memory</h2>
+      <button class="close" onclick="closeModal('memoryModal')">×</button>
+    </div>
+
+    <div class="memory-object">
+      <div class="object-symbol">👓</div>
+      <h3>My glasses</h3>
+      <p>Remembered by ECHO</p>
+    </div>
+
+    <div class="memory-timeline">
+
+      <div class="timeline-item">
+        <strong>Last seen</strong>
+        <p>Desk beside laptop · 6:42 PM</p>
+      </div>
+
+      <div class="timeline-item">
+        <strong>Visual description</strong>
+        <p>Dark-frame glasses placed beside a laptop.</p>
+      </div>
+
+      <div class="timeline-item">
+        <strong>Memory status</strong>
+        <p>Available for future retrieval.</p>
+      </div>
+
+    </div>
+
+    <button
+      class="primary"
+      style="width:100%;margin-top:5px;"
+      onclick="findGlasses()">
+      🔎 FIND MY GLASSES
+    </button>
+
+  </div>
+</div>
+
+
+<!-- FIND MODAL -->
+
+<div class="modal" id="findModal">
+  <div class="sheet">
+
+    <div class="handle"></div>
+
+    <div class="sheet-header">
+      <h2>Find My Glasses</h2>
+      <button class="close" onclick="closeModal('findModal')">×</button>
+    </div>
+
+    <div class="find-hero">
+
+      <div class="find-orb">👓</div>
+
+      <h3>Searching current view…</h3>
+
+      <p style="color:var(--muted);font-size:12px;margin-top:7px;">
+        ECHO is comparing the live scene with your visual memory.
+      </p>
+
+    </div>
+
+    <div class="direction">
+      <strong>Found</strong>
+      <p>
+        Your glasses appear on the desk,
+        slightly to your right.
+      </p>
+    </div>
+
+    <button
+      class="primary"
+      style="width:100%;margin-top:12px;"
+      onclick="speak('I found your glasses. They are on the desk, slightly to your right.')">
+      🔊 SPEAK GUIDANCE
+    </button>
+
+  </div>
+</div>
+
+
+<!-- READ MODAL -->
+
+<div class="modal" id="readModal">
+  <div class="sheet">
+
+    <div class="handle"></div>
+
+    <div class="sheet-header">
+      <h2>Read & Translate</h2>
+      <button class="close" onclick="closeModal('readModal')">×</button>
+    </div>
+
+    <div class="camera">
+
+      <div class="camera-placeholder">
+        <div>
+          <div class="cam-icon">📖</div>
+          <p>
+            Point ECHO at a notice, label,
+            document or sign.
+          </p>
+        </div>
+      </div>
+
+      <div class="camera-label">
+        TEXT READER
+      </div>
+
+    </div>
+
+    <div class="camera-controls">
+
+      <button class="primary" onclick="readDemo()">
+        READ ALOUD
+      </button>
+
+      <button class="secondary" onclick="translateDemo()">
+        TRANSLATE
+      </button>
+
+    </div>
+
+    <div class="result" id="readResult">
+
+      <div class="result-label">TEXT DETECTED</div>
+
+      <h3 id="readTitle">
+        Laboratory Block
+      </h3>
+
+      <p id="readText">
+        ECHO detected visible text and is ready
+        to read it aloud.
+      </p>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- GUIDE MODAL -->
+
+<div class="modal" id="guideModal">
+  <div class="sheet">
+
+    <div class="handle"></div>
+
+    <div class="sheet-header">
+      <h2>Voice Guide</h2>
+      <button class="close" onclick="closeModal('guideModal')">×</button>
+    </div>
+
+    <div class="route">
+
+      <div class="route-map">
+
+        <div class="route-line"></div>
+
+        <div class="map-pin pin-a">📍</div>
+
+        <div class="map-pin pin-b">🏫</div>
+
+      </div>
+
+      <div class="route-info">
+
+        <strong>Library</strong>
+
+        <p>
+          Approximately 240 m · Walking route
+        </p>
+
+      </div>
+
+    </div>
+
+    <button
+      class="primary"
+      style="width:100%;margin-top:12px;"
+      onclick="startGuidance()">
+      🔊 START VOICE GUIDANCE
+    </button>
+
+  </div>
+</div>
+
+
+<script>
+
+/* -----------------------------
+   GENERAL
+----------------------------- */
+
+function showModal(id) {
+  document.getElementById(id).classList.add("show");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove("show");
+}
+
+document.querySelectorAll(".modal").forEach(modal => {
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal) {
+      modal.classList.remove("show");
+    }
+  });
+});
+
+
+/* -----------------------------
+   VOICE
+----------------------------- */
+
+const voiceButton = document.getElementById("voiceButton");
+const voiceState = document.getElementById("voiceState");
+const voiceCommand = document.getElementById("voiceCommand");
+
+let listening = false;
+
+voiceButton.addEventListener("click", () => {
+
+  listening = !listening;
+
+  if (listening) {
+
+    voiceButton.classList.add("active");
+
+    voiceState.textContent = "Listening…";
+
+    voiceCommand.textContent = "Speak naturally";
+
+    speak("I'm listening.");
+
+    setTimeout(() => {
+
+      voiceCommand.textContent =
+        "“Where are my glasses?”";
+
+      voiceState.textContent =
+        "ECHO understood your request";
+
+      setTimeout(() => {
+
+        voiceButton.classList.remove("active");
+
+        listening = false;
+
+        speak(
+          "I last saw your glasses on the desk beside your laptop."
+        );
+
+      }, 900);
+
+    }, 1000);
+
+  } else {
+
+    voiceButton.classList.remove("active");
+
+    voiceState.textContent =
+      "ECHO is ready to listen";
+
+    voiceCommand.textContent =
+      "“Hey ECHO…”";
+
+  }
+
+});
+
+
+/* -----------------------------
+   SPEECH
+----------------------------- */
+
+function speak(text) {
+
+  if (!("speechSynthesis" in window)) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance =
+    new SpeechSynthesisUtterance(text);
+
+  utterance.rate = 0.92;
+  utterance.pitch = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+
+/* -----------------------------
+   CAMERA
+----------------------------- */
+
+let stream = null;
+
+async function startCamera() {
+
+  const video =
+    document.getElementById("video");
+
+  const placeholder =
+    document.getElementById("cameraPlaceholder");
+
+  try {
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment"
+          }
+        },
+        audio: false
+      });
+
+    video.srcObject = stream;
+
+    video.style.display = "block";
+
+    placeholder.style.display = "none";
+
+    document.getElementById("scanFrame")
+      .style.display = "block";
+
+    speak("Camera ready.");
+
+  } catch (error) {
+
+    alert(
+      "Camera permission was not granted. Please allow camera access and try again."
+    );
+
+  }
+
+}
+
+
+function analyzeScene() {
+
+  const result =
+    document.getElementById("seeResult");
+
+  result.classList.add("show");
+
+  speak(
+    "I can see a desk with a laptop, a pair of glasses and several small objects."
+  );
+
+}
+
+
+/* -----------------------------
+   SEE
+----------------------------- */
+
+function openSee() {
+  showModal("seeModal");
+}
+
+
+/* -----------------------------
+   MEMORY
+----------------------------- */
+
+function openMemory() {
+  showModal("memoryModal");
+}
+
+function findGlasses() {
+
+  closeModal("memoryModal");
+
+  showModal("findModal");
+
+  speak(
+    "I found your glasses. They are on the desk, slightly to your right."
+  );
+
+}
+
+
+/* -----------------------------
+   READ
+----------------------------- */
+
+function openRead() {
+  showModal("readModal");
+}
+
+function readDemo() {
+
+  const result =
+    document.getElementById("readResult");
+
+  result.classList.add("show");
+
+  document.getElementById("readTitle")
+    .textContent =
+    "Laboratory Block";
+
+  document.getElementById("readText")
+    .textContent =
+    "The visible sign says Laboratory Block.";
+
+  speak(
+    "The sign says Laboratory Block."
+  );
+
+}
+
+function translateDemo() {
+
+  const result =
+    document.getElementById("readResult");
+
+  result.classList.add("show");
+
+  document.getElementById("readTitle")
+    .textContent =
+    "ஆய்வகப் பிரிவு";
+
+  document.getElementById("readText")
+    .textContent =
+    "Translated from English to Tamil.";
+
+  speak(
+    "ஆய்வகப் பிரிவு"
+  );
+
+}
+
+
+/* -----------------------------
+   GUIDE
+----------------------------- */
+
+function openGuide() {
+  showModal("guideModal");
+}
+
+function startGuidance() {
+
+  speak(
+    "Starting voice guidance. Walk straight for approximately forty metres, then turn left."
+  );
+
+}
+
+
+/* -----------------------------
+   CLEAN CAMERA
+----------------------------- */
+
+window.addEventListener("beforeunload", () => {
+
+  if (stream) {
+
+    stream.getTracks().forEach(
+      track => track.stop()
+    );
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
