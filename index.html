@@ -1,8254 +1,973 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
->
-
-<meta
-  name="theme-color"
-  content="#05070a"
->
-
-<meta
-  name="description"
-  content="ECHO — a voice-first AI companion for independent living."
->
-
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050708">
 <title>ECHO — AI Companion</title>
 
-
-<!-- =========================================================
-     EXTERNAL LIBRARIES
-
-     TensorFlow.js
-     COCO-SSD
-     Tesseract.js
-     Leaflet
-========================================================= -->
-
+<!-- Real browser-side libraries -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-<link
-  rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
-
-<script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
-
 <style>
-
-/* =========================================================
-   ECHO DESIGN SYSTEM
-========================================================= */
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+:root{
+  --bg:#050708; --panel:#0b1012; --panel2:#0e1517; --line:#1d272a;
+  --text:#f4f7f5; --muted:#83908d; --green:#a8ff4d; --green2:#d4ff9d;
+  --danger:#ff6565; --blue:#75c8ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#142016 0,#070a0b 30%,#030506 70%);color:var(--text);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{display:flex;justify-content:center;padding:22px}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{width:min(980px,100%);min-height:calc(100vh - 44px)}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--green);color:#071006;display:grid;place-items:center;font-weight:900;font-size:21px;box-shadow:0 0 30px #a8ff4d33}
+.brand h1{font-size:14px;letter-spacing:.18em;margin:0}
+.brand p{font-size:9px;letter-spacing:.18em;color:var(--muted);margin:4px 0 0}
+.status{border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:#aeb8b5;font-size:10px}
+.dot{display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;margin-right:6px;box-shadow:0 0 10px var(--green)}
+.hero{padding:14px 2px 22px}
+.eyebrow{color:var(--green);font-size:9px;font-weight:800;letter-spacing:.24em}
+.hero h2{font-size:clamp(38px,8vw,78px);line-height:.88;letter-spacing:-.065em;margin:12px 0}
+.hero h2 span{color:#687473}
+.hero p{max-width:650px;color:#8f9b98;font-size:13px;line-height:1.7}
+.card{background:linear-gradient(145deg,#0d1315,#080d0f);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:0 20px 60px #0008}
+.camera{position:relative;background:#010304;border-radius:17px;overflow:hidden;aspect-ratio:16/10;display:grid;place-items:center}
+video{width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(1)}
+canvas#overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none}
+.camera-placeholder{text-align:center;color:#6f7b78;padding:25px}
+.camera-placeholder .eye{width:50px;height:50px;border:1px solid #263033;border-radius:15px;display:grid;place-items:center;margin:auto auto 13px;font-size:22px;color:var(--green)}
+.camera-placeholder strong{display:block;color:#dce4e1;font-size:12px;margin-bottom:5px}
+.camera-placeholder small{font-size:10px}
+.camera-tag{position:absolute;top:12px;left:12px;border:1px solid #293436;background:#050808cc;border-radius:999px;padding:6px 9px;font-size:8px;letter-spacing:.16em;z-index:3}
+.live-tag{position:absolute;top:12px;right:12px;background:#a8ff4d;border-radius:999px;color:#071006;padding:6px 9px;font-size:8px;font-weight:900;display:none;z-index:3}
+.controls{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.btn{border:1px solid var(--line);background:#11181a;color:#d8dfdd;border-radius:11px;padding:12px 7px;font-size:10px;font-weight:800;letter-spacing:.08em}
+.btn:hover{border-color:#53615d;transform:translateY(-1px)}
+.btn.primary{background:var(--green);color:#081007;border-color:var(--green)}
+.btn.active{box-shadow:0 0 0 2px #a8ff4d33;background:#172313;border-color:var(--green);color:var(--green)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.note{font-size:9px;color:#687572;margin:7px 2px 0}
+.voice{margin-top:12px;display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 16px}
+.voice-label{font-size:10px;color:#778481;margin-bottom:12px}
+.mic{width:78px;height:78px;border-radius:50%;border:1px solid #334034;background:#10170f;color:var(--green);font-size:27px;box-shadow:0 0 35px #a8ff4d14}
+.mic.listening{animation:pulse 1s infinite;border-color:var(--green);box-shadow:0 0 50px #a8ff4d44}
+@keyframes pulse{50%{transform:scale(1.06)}}
+.transcript{min-height:24px;margin-top:13px;color:#dce4e1;font-size:14px}
+.response{color:#87938f;font-size:10px;margin-top:5px;max-width:600px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.feature{padding:15px;border:1px solid var(--line);border-radius:16px;background:#090f11}
+.feature .ico{font-size:18px;margin-bottom:8px}
+.feature b{font-size:11px;display:block}
+.feature span{font-size:9px;color:#75817e;line-height:1.5}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:22px 2px 9px}
+.section-title b{font-size:10px;letter-spacing:.15em;text-transform:uppercase}
+.section-title span{font-size:8px;color:var(--muted)}
+.bottom{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.bottom button{padding:12px;border:1px solid var(--line);background:#0a1012;color:#889491;border-radius:12px;font-size:9px}
+.sheet{position:fixed;inset:0;background:#0009;display:none;align-items:flex-end;justify-content:center;z-index:20}
+.sheet.open{display:flex}
+.sheet-inner{width:min(700px,100%);max-height:75vh;overflow:auto;background:#0b1113;border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:20px}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.close{border:0;background:#172022;color:#ccd4d1;border-radius:9px;padding:7px 10px}
+.memory{border:1px solid var(--line);border-radius:14px;padding:11px;margin:8px 0;display:flex;gap:10px}
+.memory img{width:70px;height:55px;object-fit:cover;border-radius:9px;background:#050707}
+.memory b{font-size:11px}.memory small{display:block;color:#77837f;font-size:9px;margin-top:5px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#11191a;border:1px solid #35413e;border-radius:999px;padding:10px 15px;font-size:10px;opacity:0;pointer-events:none;transition:.25s;z-index:30;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.error{color:var(--danger)!important}
+.success{color:var(--green)!important}
+@media(max-width:600px){
+ body{padding:10px}.app{min-height:calc(100vh - 20px)}
+ .hero h2{font-size:48px}.controls{grid-template-columns:repeat(2,1fr)}
+ .grid{grid-template-columns:1fr}
 }
-
-:root {
-
-  --bg:
-    #05070a;
-
-  --surface:
-    #0b0f14;
-
-  --surface-2:
-    #11161d;
-
-  --surface-3:
-    #171e27;
-
-  --text:
-    #f7f9fb;
-
-  --muted:
-    #8c97a5;
-
-  --muted-2:
-    #606b78;
-
-  --line:
-    rgba(255,255,255,.085);
-
-  --line-strong:
-    rgba(255,255,255,.15);
-
-  --accent:
-    #a8ff63;
-
-  --accent-soft:
-    rgba(168,255,99,.08);
-
-  --accent-border:
-    rgba(168,255,99,.28);
-
-  --blue:
-    #79b8ff;
-
-  --orange:
-    #ffc86a;
-
-  --red:
-    #ff7474;
-
-  --radius-xl:
-    30px;
-
-  --radius-lg:
-    22px;
-
-  --radius-md:
-    17px;
-
-  --radius-sm:
-    12px;
-
-  --shadow:
-    0 30px 80px rgba(0,0,0,.38);
-}
-
-
-html {
-
-  background:
-    var(--bg);
-
-  color-scheme:
-    dark;
-
-  scroll-behavior:
-    smooth;
-}
-
-
-body {
-
-  min-height:
-    100vh;
-
-  background:
-
-    radial-gradient(
-      circle at 50% -15%,
-      rgba(168,255,99,.065),
-      transparent 35%
-    ),
-
-    var(--bg);
-
-  color:
-    var(--text);
-
-  font-family:
-
-    -apple-system,
-    BlinkMacSystemFont,
-    "SF Pro Display",
-    "SF Pro Text",
-    Inter,
-    Helvetica,
-    Arial,
-    sans-serif;
-
-  -webkit-font-smoothing:
-    antialiased;
-
-  overflow-x:
-    hidden;
-}
-
-
-button,
-input,
-select {
-
-  font:
-    inherit;
-}
-
-
-button {
-
-  border:
-    0;
-
-  cursor:
-    pointer;
-}
-
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-
-  outline:
-    2px solid var(--accent);
-
-  outline-offset:
-    3px;
-}
-
-
-/* =========================================================
-   APP
-========================================================= */
-
-.app {
-
-  width:
-    min(100%, 620px);
-
-  min-height:
-    100vh;
-
-  margin:
-    auto;
-
-  padding:
-
-    env(safe-area-inset-top)
-    16px
-    calc(100px + env(safe-area-inset-bottom))
-    16px;
-}
-
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.header {
-
-  height:
-    68px;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  position:
-    sticky;
-
-  top:
-    0;
-
-  z-index:
-    50;
-
-  background:
-
-    linear-gradient(
-      to bottom,
-      rgba(5,7,10,.96),
-      rgba(5,7,10,.8),
-      transparent
-    );
-
-  backdrop-filter:
-    blur(18px);
-}
-
-
-.brand {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    11px;
-}
-
-
-.brand-mark {
-
-  width:
-    40px;
-
-  height:
-    40px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  border-radius:
-    14px;
-
-  background:
-    var(--accent);
-
-  color:
-    #071006;
-
-  font-size:
-    18px;
-
-  font-weight:
-    950;
-
-  box-shadow:
-    0 0 35px rgba(168,255,99,.13);
-}
-
-
-.brand-name {
-
-  font-size:
-    18px;
-
-  letter-spacing:
-    .15em;
-
-  font-weight:
-    900;
-}
-
-
-.brand-sub {
-
-  color:
-    var(--muted);
-
-  font-size:
-    8px;
-
-  letter-spacing:
-    .11em;
-
-  margin-top:
-    2px;
-}
-
-
-.system-status {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    7px;
-
-  padding:
-    8px 11px;
-
-  border:
-    1px solid var(--line);
-
-  background:
-    rgba(255,255,255,.025);
-
-  border-radius:
-    999px;
-
-  color:
-    #cbd4de;
-
-  font-size:
-    9px;
-
-  font-weight:
-    800;
-}
-
-
-.status-dot {
-
-  width:
-    7px;
-
-  height:
-    7px;
-
-  border-radius:
-    50%;
-
-  background:
-    var(--accent);
-
-  box-shadow:
-    0 0 12px var(--accent);
-}
-
-
-.status-dot.busy {
-
-  background:
-    var(--orange);
-
-  box-shadow:
-    0 0 12px var(--orange);
-}
-
-
-.status-dot.error {
-
-  background:
-    var(--red);
-
-  box-shadow:
-    0 0 12px var(--red);
-}
-
-
-/* =========================================================
-   HERO
-========================================================= */
-
-.hero {
-
-  padding:
-    32px 2px 22px;
-}
-
-
-.kicker {
-
-  color:
-    var(--accent);
-
-  font-size:
-    9px;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    .19em;
-
-  text-transform:
-    uppercase;
-
-  margin-bottom:
-    13px;
-}
-
-
-.hero h1 {
-
-  font-size:
-    clamp(40px, 10vw, 58px);
-
-  line-height:
-    .92;
-
-  letter-spacing:
-    -.055em;
-
-  font-weight:
-    850;
-}
-
-
-.hero h1 span {
-
-  color:
-    var(--muted);
-}
-
-
-.hero p {
-
-  max-width:
-    500px;
-
-  margin-top:
-    17px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    13px;
-
-  line-height:
-    1.65;
-}
-
-
-/* =========================================================
-   MAIN LIVE CAMERA
-========================================================= */
-
-.camera-card {
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    var(--radius-xl);
-
-  padding:
-    10px;
-
-  background:
-    var(--surface);
-
-  box-shadow:
-    var(--shadow);
-}
-
-
-.camera {
-
-  position:
-    relative;
-
-  width:
-    100%;
-
-  aspect-ratio:
-    4 / 3;
-
-  overflow:
-    hidden;
-
-  border-radius:
-    23px;
-
-  background:
-    #030405;
-}
-
-
-#video {
-
-  width:
-    100%;
-
-  height:
-    100%;
-
-  object-fit:
-    contain;
-
-  background:
-    #020304;
-
-  display:
-    none;
-}
-
-
-#overlay {
-
-  position:
-    absolute;
-
-  inset:
-    0;
-
-  width:
-    100%;
-
-  height:
-    100%;
-
-  pointer-events:
-    none;
-}
-
-
-.camera-empty {
-
-  position:
-    absolute;
-
-  inset:
-    0;
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  text-align:
-    center;
-
-  padding:
-    30px;
-
-  background:
-
-    radial-gradient(
-      circle at center,
-      rgba(168,255,99,.075),
-      transparent 50%
-    );
-}
-
-
-.camera-empty-icon {
-
-  width:
-    72px;
-
-  height:
-    72px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  margin:
-    auto auto 16px;
-
-  border-radius:
-    23px;
-
-  background:
-    rgba(255,255,255,.045);
-
-  border:
-    1px solid var(--line);
-
-  font-size:
-    28px;
-}
-
-
-.camera-empty h2 {
-
-  font-size:
-    18px;
-
-  margin-bottom:
-    7px;
-}
-
-
-.camera-empty p {
-
-  color:
-    var(--muted);
-
-  max-width:
-    280px;
-
-  font-size:
-    11px;
-
-  line-height:
-    1.55;
-}
-
-
-.camera-tag {
-
-  position:
-    absolute;
-
-  top:
-    12px;
-
-  left:
-    12px;
-
-  padding:
-    7px 10px;
-
-  border-radius:
-    9px;
-
-  background:
-    rgba(0,0,0,.56);
-
-  backdrop-filter:
-    blur(10px);
-
-  border:
-    1px solid rgba(255,255,255,.08);
-
-  color:
-    #e2e8ee;
-
-  font-size:
-    8px;
-
-  font-weight:
-    850;
-
-  letter-spacing:
-    .12em;
-}
-
-
-.camera-live {
-
-  position:
-    absolute;
-
-  top:
-    12px;
-
-  right:
-    12px;
-
-  display:
-    none;
-
-  align-items:
-    center;
-
-  gap:
-    6px;
-
-  padding:
-    7px 10px;
-
-  border-radius:
-    9px;
-
-  background:
-    rgba(0,0,0,.56);
-
-  backdrop-filter:
-    blur(10px);
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    850;
-}
-
-
-.camera-live.show {
-
-  display:
-    flex;
-}
-
-
-.camera-live::before {
-
-  content:
-    "";
-
-  width:
-    6px;
-
-  height:
-    6px;
-
-  border-radius:
-    50%;
-
-  background:
-    var(--accent);
-
-  box-shadow:
-    0 0 10px var(--accent);
-}
-
-
-.scan-corners {
-
-  position:
-    absolute;
-
-  inset:
-    42px 32px;
-
-  display:
-    none;
-
-  border:
-    1px solid rgba(168,255,99,.48);
-
-  border-radius:
-    20px;
-
-  pointer-events:
-    none;
-}
-
-
-.scan-corners.show {
-
-  display:
-    block;
-
-  animation:
-    breathe 2s infinite;
-}
-
-
-.camera-actions {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr 1fr 1fr;
-
-  gap:
-    7px;
-
-  margin-top:
-    9px;
-}
-
-
-.btn {
-
-  min-height:
-    48px;
-
-  border-radius:
-    14px;
-
-  border:
-    1px solid var(--line);
-
-  background:
-    var(--surface-2);
-
-  color:
-    var(--text);
-
-  font-size:
-    9px;
-
-  font-weight:
-    850;
-
-  transition:
-    .2s;
-}
-
-
-.btn:hover {
-
-  background:
-    var(--surface-3);
-
-  border-color:
-    var(--line-strong);
-}
-
-
-.btn:active {
-
-  transform:
-    scale(.97);
-}
-
-
-.btn.primary {
-
-  background:
-    var(--accent);
-
-  border-color:
-    var(--accent);
-
-  color:
-    #071006;
-}
-
-
-/* =========================================================
-   DETECTION STATUS
-========================================================= */
-
-.detection-status {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    8px;
-
-  margin:
-    10px 3px 0;
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-}
-
-
-.detection-spinner {
-
-  width:
-    8px;
-
-  height:
-    8px;
-
-  border:
-    1px solid var(--muted-2);
-
-  border-top-color:
-    var(--accent);
-
-  border-radius:
-    50%;
-
-  display:
-    none;
-
-  animation:
-    spin .7s linear infinite;
-}
-
-
-.detection-spinner.show {
-
-  display:
-    block;
-}
-
-
-/* =========================================================
-   RESULT
-========================================================= */
-
-.result {
-
-  display:
-    none;
-
-  margin-top:
-    10px;
-
-  padding:
-    16px;
-
-  border:
-    1px solid var(--accent-border);
-
-  border-radius:
-    18px;
-
-  background:
-    var(--accent-soft);
-
-  animation:
-    fadeUp .25s ease;
-}
-
-
-.result.show {
-
-  display:
-    block;
-}
-
-
-.result-label {
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    .14em;
-}
-
-
-.result h3 {
-
-  margin-top:
-    8px;
-
-  font-size:
-    17px;
-}
-
-
-.result p {
-
-  margin-top:
-    6px;
-
-  color:
-    #bec7d1;
-
-  font-size:
-    11px;
-
-  line-height:
-    1.55;
-}
-
-
-.result-tags {
-
-  display:
-    flex;
-
-  flex-wrap:
-    wrap;
-
-  gap:
-    6px;
-
-  margin-top:
-    11px;
-}
-
-
-.result-tag {
-
-  padding:
-    7px 9px;
-
-  border-radius:
-    9px;
-
-  background:
-    rgba(255,255,255,.055);
-
-  border:
-    1px solid var(--line);
-
-  color:
-    #d6dde5;
-
-  font-size:
-    9px;
-}
-
-
-/* =========================================================
-   VOICE PANEL
-========================================================= */
-
-.voice-card {
-
-  margin-top:
-    14px;
-
-  padding:
-    22px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    var(--radius-xl);
-
-  background:
-
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(168,255,99,.085),
-      transparent 48%
-    ),
-
-    var(--surface);
-
-  text-align:
-    center;
-
-  box-shadow:
-    var(--shadow);
-}
-
-
-.voice-status {
-
-  color:
-    var(--muted);
-
-  font-size:
-    10px;
-
-  margin-bottom:
-    16px;
-}
-
-
-.voice-button {
-
-  width:
-    96px;
-
-  height:
-    96px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  margin:
-    auto;
-
-  border-radius:
-    50%;
-
-  background:
-    #111910;
-
-  border:
-    1px solid var(--accent-border);
-
-  color:
-    var(--accent);
-
-  font-size:
-    30px;
-
-  box-shadow:
-
-    0 0 0 11px rgba(168,255,99,.025),
-
-    0 0 50px rgba(168,255,99,.08);
-
-  transition:
-    .25s;
-}
-
-
-.voice-button:hover {
-
-  transform:
-    scale(1.04);
-}
-
-
-.voice-button.listening {
-
-  animation:
-    voicePulse 1.2s infinite;
-}
-
-
-.voice-transcript {
-
-  min-height:
-    24px;
-
-  margin-top:
-    17px;
-
-  font-size:
-    16px;
-
-  font-weight:
-    750;
-
-  line-height:
-    1.4;
-}
-
-
-.voice-help {
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-
-  margin-top:
-    7px;
-}
-
-
-/* =========================================================
-   RESPONSE
-========================================================= */
-
-.response {
-
-  display:
-    none;
-
-  margin-top:
-    11px;
-
-  padding:
-    15px;
-
-  border:
-    1px solid var(--accent-border);
-
-  border-radius:
-    18px;
-
-  background:
-    var(--accent-soft);
-
-  text-align:
-    left;
-}
-
-
-.response.show {
-
-  display:
-    block;
-
-  animation:
-    fadeUp .25s ease;
-}
-
-
-.response-label {
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    .14em;
-}
-
-
-.response-text {
-
-  margin-top:
-    7px;
-
-  font-size:
-    13px;
-
-  line-height:
-    1.55;
-
-  font-weight:
-    600;
-}
-
-
-.response-actions {
-
-  display:
-    flex;
-
-  flex-wrap:
-    wrap;
-
-  gap:
-    7px;
-
-  margin-top:
-    11px;
-}
-
-
-.mini-btn {
-
-  padding:
-    9px 11px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    10px;
-
-  background:
-    rgba(0,0,0,.18);
-
-  color:
-    white;
-
-  font-size:
-    9px;
-
-  font-weight:
-    800;
-}
-
-
-/* =========================================================
-   FEATURES
-========================================================= */
-
-.section {
-
-  margin-top:
-    26px;
-}
-
-
-.section-header {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  margin:
-    0 2px 10px;
-}
-
-
-.section-header strong {
-
-  font-size:
-    12px;
-
-  font-weight:
-    850;
-}
-
-
-.section-header span {
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-}
-
-
-.feature-grid {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:
-    9px;
-}
-
-
-.feature {
-
-  min-height:
-    112px;
-
-  padding:
-    16px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    var(--radius-lg);
-
-  background:
-    var(--surface);
-
-  color:
-    white;
-
-  text-align:
-    left;
-
-  transition:
-    .2s;
-}
-
-
-.feature:hover {
-
-  transform:
-    translateY(-2px);
-
-  border-color:
-    var(--line-strong);
-
-  background:
-    var(--surface-2);
-}
-
-
-.feature-icon {
-
-  width:
-    36px;
-
-  height:
-    36px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  margin-bottom:
-    11px;
-
-  border-radius:
-    11px;
-
-  background:
-    rgba(255,255,255,.045);
-
-  font-size:
-    18px;
-}
-
-
-.feature strong {
-
-  display:
-    block;
-
-  font-size:
-    12px;
-}
-
-
-.feature small {
-
-  display:
-    block;
-
-  margin-top:
-    5px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-
-  line-height:
-    1.4;
-}
-
-
-/* =========================================================
-   MEMORY PREVIEW
-========================================================= */
-
-.memory-preview {
-
-  padding:
-    15px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    var(--radius-lg);
-
-  background:
-    var(--surface);
-}
-
-
-.memory-empty {
-
-  color:
-    var(--muted);
-
-  text-align:
-    center;
-
-  padding:
-    15px;
-
-  font-size:
-    10px;
-
-  line-height:
-    1.5;
-}
-
-
-.memory-item {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    12px;
-}
-
-
-.memory-icon {
-
-  width:
-    48px;
-
-  height:
-    48px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  border-radius:
-    15px;
-
-  background:
-    var(--surface-3);
-
-  font-size:
-    22px;
-}
-
-
-.memory-info {
-
-  flex:
-    1;
-
-  min-width:
-    0;
-}
-
-
-.memory-info strong {
-
-  display:
-    block;
-
-  font-size:
-    13px;
-}
-
-
-.memory-info p {
-
-  margin-top:
-    4px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-
-  line-height:
-    1.45;
-}
-
-
-.memory-badge {
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    900;
-}
-
-
-/* =========================================================
-   SHEET
-========================================================= */
-
-.sheet-backdrop {
-
-  position:
-    fixed;
-
-  inset:
-    0;
-
-  z-index:
-    200;
-
-  display:
-    none;
-
-  align-items:
-    flex-end;
-
-  justify-content:
-    center;
-
-  background:
-    rgba(0,0,0,.76);
-
-  backdrop-filter:
-    blur(18px);
-}
-
-
-.sheet-backdrop.open {
-
-  display:
-    flex;
-}
-
-
-.sheet {
-
-  width:
-    min(620px,100%);
-
-  max-height:
-    92vh;
-
-  overflow-y:
-    auto;
-
-  padding:
-    12px 18px calc(28px + env(safe-area-inset-bottom));
-
-  border-top:
-    1px solid var(--line-strong);
-
-  border-radius:
-    30px 30px 0 0;
-
-  background:
-    #0a0e13;
-
-  animation:
-    sheetUp .25s ease;
-}
-
-
-.sheet-handle {
-
-  width:
-    42px;
-
-  height:
-    4px;
-
-  margin:
-    0 auto 19px;
-
-  border-radius:
-    99px;
-
-  background:
-    #39414c;
-}
-
-
-.sheet-header {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    space-between;
-
-  margin-bottom:
-    17px;
-}
-
-
-.sheet-header h2 {
-
-  font-size:
-    21px;
-
-  letter-spacing:
-    -.025em;
-}
-
-
-.close {
-
-  width:
-    36px;
-
-  height:
-    36px;
-
-  border-radius:
-    50%;
-
-  border:
-    1px solid var(--line);
-
-  background:
-    var(--surface-2);
-
-  color:
-    white;
-
-  font-size:
-    20px;
-}
-
-
-.sheet-description {
-
-  color:
-    var(--muted);
-
-  font-size:
-    11px;
-
-  line-height:
-    1.55;
-
-  margin-bottom:
-    15px;
-}
-
-
-.sheet-button {
-
-  width:
-    100%;
-
-  padding:
-    16px;
-
-  margin-bottom:
-    9px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    17px;
-
-  background:
-    var(--surface);
-
-  color:
-    white;
-
-  text-align:
-    left;
-}
-
-
-.sheet-button strong {
-
-  display:
-    block;
-
-  font-size:
-    13px;
-}
-
-
-.sheet-button p {
-
-  margin-top:
-    5px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    10px;
-
-  line-height:
-    1.45;
-}
-
-
-.sheet-button.primary {
-
-  background:
-    var(--accent);
-
-  color:
-    #071006;
-
-  border-color:
-    var(--accent);
-}
-
-
-/* =========================================================
-   OCR
-========================================================= */
-
-.ocr-preview {
-
-  position:
-    relative;
-
-  min-height:
-    230px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    22px;
-
-  background:
-    var(--surface);
-
-  overflow:
-    hidden;
-}
-
-
-.ocr-image {
-
-  max-width:
-    100%;
-
-  max-height:
-    280px;
-
-  display:
-    none;
-}
-
-
-.document-demo {
-
-  width:
-    72%;
-
-  padding:
-    24px 18px;
-
-  background:
-    #e9e8e2;
-
-  color:
-    #181a1c;
-
-  border-radius:
-    5px;
-
-  box-shadow:
-    0 20px 60px rgba(0,0,0,.35);
-}
-
-
-.doc-title {
-
-  width:
-    65%;
-
-  height:
-    9px;
-
-  margin:
-    0 auto 16px;
-
-  background:
-    #5b6064;
-
-  border-radius:
-    3px;
-}
-
-
-.doc-line {
-
-  height:
-    5px;
-
-  margin:
-    9px 0;
-
-  background:
-    #b6b7b3;
-
-  border-radius:
-    4px;
-}
-
-
-.ocr-controls {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:
-    8px;
-
-  margin-top:
-    10px;
-}
-
-
-.ocr-result {
-
-  display:
-    none;
-
-  margin-top:
-    11px;
-
-  padding:
-    15px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    17px;
-
-  background:
-    var(--surface);
-}
-
-
-.ocr-result.show {
-
-  display:
-    block;
-}
-
-
-.ocr-label {
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    .13em;
-}
-
-
-.ocr-result-text {
-
-  margin-top:
-    8px;
-
-  font-size:
-    13px;
-
-  line-height:
-    1.55;
-}
-
-
-/* =========================================================
-   TRANSLATION
-========================================================= */
-
-.language-row {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr auto 1fr;
-
-  align-items:
-    center;
-
-  gap:
-    8px;
-
-  margin-top:
-    12px;
-}
-
-
-.language-select {
-
-  width:
-    100%;
-
-  min-height:
-    45px;
-
-  padding:
-    0 10px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    12px;
-
-  background:
-    var(--surface-2);
-
-  color:
-    white;
-
-  font-size:
-    11px;
-}
-
-
-.language-arrow {
-
-  color:
-    var(--accent);
-
-  font-weight:
-    900;
-}
-
-
-/* =========================================================
-   LOCATION
-========================================================= */
-
-.location-card {
-
-  padding:
-    16px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    19px;
-
-  background:
-    var(--surface);
-
-  margin-bottom:
-    10px;
-}
-
-
-.location-big {
-
-  font-size:
-    18px;
-
-  font-weight:
-    800;
-}
-
-
-.location-small {
-
-  margin-top:
-    6px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    10px;
-
-  line-height:
-    1.5;
-}
-
-
-.coordinate-row {
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap:
-    8px;
-
-  margin-top:
-    10px;
-}
-
-
-.coordinate {
-
-  padding:
-    10px;
-
-  border-radius:
-    11px;
-
-  background:
-    var(--surface-2);
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-}
-
-
-/* =========================================================
-   ROUTE
-========================================================= */
-
-.destination-input {
-
-  width:
-    100%;
-
-  min-height:
-    48px;
-
-  padding:
-    0 14px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    14px;
-
-  background:
-    var(--surface-2);
-
-  color:
-    white;
-
-  font-size:
-    12px;
-}
-
-
-.route-button {
-
-  width:
-    100%;
-
-  min-height:
-    48px;
-
-  margin-top:
-    8px;
-
-  border-radius:
-    14px;
-
-  background:
-    var(--accent);
-
-  color:
-    #071006;
-
-  font-size:
-    10px;
-
-  font-weight:
-    900;
-}
-
-
-#map {
-
-  width:
-    100%;
-
-  height:
-    300px;
-
-  margin-top:
-    12px;
-
-  border-radius:
-    20px;
-
-  overflow:
-    hidden;
-
-  border:
-    1px solid var(--line);
-
-  display:
-    none;
-}
-
-
-.route-info {
-
-  margin-top:
-    10px;
-
-  padding:
-    14px;
-
-  border-radius:
-    16px;
-
-  background:
-    var(--surface);
-
-  border:
-    1px solid var(--line);
-
-  display:
-    none;
-}
-
-
-.route-info.show {
-
-  display:
-    block;
-}
-
-
-.route-info strong {
-
-  font-size:
-    14px;
-}
-
-
-.route-info p {
-
-  color:
-    var(--muted);
-
-  font-size:
-    10px;
-
-  margin-top:
-    5px;
-
-  line-height:
-    1.5;
-}
-
-
-.turn-list {
-
-  margin-top:
-    10px;
-}
-
-
-.turn {
-
-  padding:
-    10px 0;
-
-  border-bottom:
-    1px solid var(--line);
-
-  font-size:
-    10px;
-
-  color:
-    #c8d0d9;
-}
-
-
-.turn:last-child {
-
-  border-bottom:
-    0;
-}
-
-
-/* =========================================================
-   MEMORY LIST
-========================================================= */
-
-.memory-large {
-
-  padding:
-    15px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    18px;
-
-  background:
-    var(--surface);
-
-  margin-bottom:
-    9px;
-}
-
-
-.memory-top {
-
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  gap:
-    12px;
-}
-
-
-.memory-large-icon {
-
-  width:
-    48px;
-
-  height:
-    48px;
-
-  display:
-    grid;
-
-  place-items:
-    center;
-
-  border-radius:
-    15px;
-
-  background:
-    var(--surface-3);
-
-  font-size:
-    22px;
-}
-
-
-.memory-large-info {
-
-  flex:
-    1;
-}
-
-
-.memory-large-info strong {
-
-  font-size:
-    13px;
-}
-
-
-.memory-large-info p {
-
-  color:
-    var(--muted);
-
-  margin-top:
-    4px;
-
-  font-size:
-    9px;
-
-  line-height:
-    1.4;
-}
-
-
-.delete-memory {
-
-  background:
-    transparent;
-
-  color:
-    var(--muted);
-
-  font-size:
-    18px;
-}
-
-
-.memory-meta {
-
-  margin-top:
-    12px;
-
-  padding-top:
-    11px;
-
-  border-top:
-    1px solid var(--line);
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-
-  line-height:
-    1.5;
-}
-
-
-/* =========================================================
-   HISTORY
-========================================================= */
-
-.history-item {
-
-  padding:
-    13px 0;
-
-  border-bottom:
-    1px solid var(--line);
-}
-
-
-.history-role {
-
-  color:
-    var(--accent);
-
-  font-size:
-    8px;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    .1em;
-}
-
-
-.history-text {
-
-  margin-top:
-    6px;
-
-  font-size:
-    11px;
-
-  line-height:
-    1.5;
-}
-
-
-.history-time {
-
-  margin-top:
-    4px;
-
-  color:
-    var(--muted-2);
-
-  font-size:
-    8px;
-}
-
-
-/* =========================================================
-   ACCESSIBILITY
-========================================================= */
-
-.accessibility-card {
-
-  margin-top:
-    15px;
-
-  padding:
-    15px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    19px;
-
-  background:
-    var(--surface);
-
-  display:
-    flex;
-
-  gap:
-    12px;
-
-  align-items:
-    flex-start;
-}
-
-
-.accessibility-icon {
-
-  font-size:
-    22px;
-}
-
-
-.accessibility-card p {
-
-  color:
-    var(--muted);
-
-  font-size:
-    9px;
-
-  line-height:
-    1.55;
-}
-
-
-/* =========================================================
-   BOTTOM NAV
-========================================================= */
-
-.bottom-nav {
-
-  position:
-    fixed;
-
-  left:
-    50%;
-
-  bottom:
-    calc(10px + env(safe-area-inset-bottom));
-
-  transform:
-    translateX(-50%);
-
-  width:
-    min(calc(100% - 24px), 580px);
-
-  height:
-    68px;
-
-  padding:
-    6px;
-
-  display:
-    grid;
-
-  grid-template-columns:
-    repeat(4,1fr);
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    23px;
-
-  background:
-    rgba(11,15,20,.92);
-
-  backdrop-filter:
-    blur(24px);
-
-  z-index:
-    150;
-
-  box-shadow:
-    0 25px 70px rgba(0,0,0,.48);
-}
-
-
-.nav {
-
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  gap:
-    4px;
-
-  border-radius:
-    17px;
-
-  background:
-    transparent;
-
-  color:
-    var(--muted);
-
-  font-size:
-    17px;
-}
-
-
-.nav span {
-
-  font-size:
-    8px;
-
-  font-weight:
-    800;
-}
-
-
-.nav.active {
-
-  color:
-    var(--accent);
-
-  background:
-    rgba(168,255,99,.08);
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-.toast {
-
-  position:
-    fixed;
-
-  left:
-    50%;
-
-  bottom:
-    91px;
-
-  z-index:
-    600;
-
-  max-width:
-    calc(100% - 30px);
-
-  padding:
-    12px 16px;
-
-  border-radius:
-    14px;
-
-  background:
-    #eaffdf;
-
-  color:
-    #071006;
-
-  font-size:
-    10px;
-
-  font-weight:
-    850;
-
-  text-align:
-    center;
-
-  opacity:
-    0;
-
-  transform:
-    translateX(-50%) translateY(15px);
-
-  pointer-events:
-    none;
-
-  transition:
-    .25s;
-}
-
-
-.toast.show {
-
-  opacity:
-    1;
-
-  transform:
-    translateX(-50%) translateY(0);
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.loading-overlay {
-
-  position:
-    fixed;
-
-  inset:
-    0;
-
-  z-index:
-    700;
-
-  display:
-    none;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  background:
-    rgba(5,7,10,.88);
-
-  backdrop-filter:
-    blur(16px);
-}
-
-
-.loading-overlay.show {
-
-  display:
-    flex;
-}
-
-
-.loading-card {
-
-  width:
-    min(340px, calc(100% - 40px));
-
-  padding:
-    25px;
-
-  border:
-    1px solid var(--line);
-
-  border-radius:
-    25px;
-
-  background:
-    var(--surface);
-
-  text-align:
-    center;
-}
-
-
-.loader {
-
-  width:
-    38px;
-
-  height:
-    38px;
-
-  margin:
-    0 auto 15px;
-
-  border:
-    2px solid var(--line);
-
-  border-top-color:
-    var(--accent);
-
-  border-radius:
-    50%;
-
-  animation:
-    spin .7s linear infinite;
-}
-
-
-.loading-card h3 {
-
-  font-size:
-    16px;
-}
-
-
-.loading-card p {
-
-  margin-top:
-    6px;
-
-  color:
-    var(--muted);
-
-  font-size:
-    10px;
-
-  line-height:
-    1.5;
-}
-
-
-/* =========================================================
-   ANIMATIONS
-========================================================= */
-
-@keyframes spin {
-
-  to {
-    transform:
-      rotate(360deg);
-  }
-
-}
-
-
-@keyframes breathe {
-
-  0%,100% {
-    opacity:
-      .35;
-  }
-
-  50% {
-    opacity:
-      1;
-  }
-
-}
-
-
-@keyframes voicePulse {
-
-  0%,100% {
-
-    box-shadow:
-      0 0 0 0 rgba(168,255,99,.18),
-      0 0 50px rgba(168,255,99,.08);
-
-  }
-
-  50% {
-
-    box-shadow:
-      0 0 0 25px rgba(168,255,99,0),
-      0 0 65px rgba(168,255,99,.14);
-
-  }
-
-}
-
-
-@keyframes sheetUp {
-
-  from {
-    transform:
-      translateY(100%);
-  }
-
-  to {
-    transform:
-      translateY(0);
-  }
-
-}
-
-
-@keyframes fadeUp {
-
-  from {
-
-    opacity:
-      0;
-
-    transform:
-      translateY(7px);
-
-  }
-
-  to {
-
-    opacity:
-      1;
-
-    transform:
-      translateY(0);
-
-  }
-
-}
-
-
-/* =========================================================
-   DESKTOP
-========================================================= */
-
-@media (min-width:800px) {
-
-  body {
-
-    padding:
-      25px 0;
-  }
-
-  .app {
-
-    border:
-      1px solid var(--line);
-
-    border-radius:
-      34px;
-
-    background:
-      #080b0f;
-
-    box-shadow:
-      0 40px 110px rgba(0,0,0,.5);
-  }
-
-}
-
 </style>
-
 </head>
 
-
 <body>
-
-
-<!-- =======================================================
-     APPLICATION
-======================================================= -->
-
 <div class="app">
 
-
-<!-- =======================================================
-     HEADER
-======================================================= -->
-
-<header class="header">
-
-  <div class="brand">
-
-    <div class="brand-mark">
-      E
+  <header class="top">
+    <div class="brand">
+      <div class="logo">E</div>
+      <div><h1>ECHO</h1><p>CONTEXT-AWARE AI COMPANION</p></div>
     </div>
+    <div class="status"><span class="dot"></span><span id="statusText">READY</span></div>
+  </header>
 
-    <div>
+  <section class="hero">
+    <div class="eyebrow">INDEPENDENT LIVING</div>
+    <h2>Ask. See.<br><span>Understand.</span></h2>
+    <p>ECHO is a voice-first companion that uses the phone camera, microphone, GPS and local browser storage to help a person see, read, remember and navigate the world.</p>
+  </section>
 
-      <div class="brand-name">
-        ECHO
+  <section class="card">
+    <div class="camera" id="cameraBox">
+      <div class="camera-tag">LIVE VISION</div>
+      <div class="live-tag" id="liveTag">● LIVE</div>
+      <div class="camera-placeholder" id="placeholder">
+        <div class="eye">◉</div>
+        <strong>ECHO Vision</strong>
+        <small>Press START to open the real camera.</small>
       </div>
-
-      <div class="brand-sub">
-        CONTEXT-AWARE AI COMPANION
-      </div>
-
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
     </div>
 
-  </div>
-
-
-  <div class="system-status">
-
-    <span
-      class="status-dot"
-      id="statusDot">
-    </span>
-
-    <span
-      id="systemStatus">
-      READY
-    </span>
-
-  </div>
-
-</header>
-
-
-<!-- =======================================================
-     HERO
-======================================================= -->
-
-<section class="hero">
-
-  <div class="kicker">
-    Independent living
-  </div>
-
-  <h1>
-
-    Ask. See.<br>
-
-    <span>Understand.</span>
-
-  </h1>
-
-  <p>
-
-    ECHO is a voice-first AI companion designed
-    to help elderly and visually impaired people
-    understand their surroundings, remember important
-    things, read information and move more independently.
-
-  </p>
-
-</section>
-
-
-<!-- =======================================================
-     LIVE CAMERA
-======================================================= -->
-
-<section class="camera-card">
-
-
-  <div class="camera">
-
-
-    <video
-      id="video"
-      autoplay
-      playsinline
-      muted>
-    </video>
-
-
-    <canvas
-      id="overlay">
-    </canvas>
-
-
-    <div
-      class="camera-empty"
-      id="cameraEmpty">
-
-      <div>
-
-        <div class="camera-empty-icon">
-          ◉
-        </div>
-
-        <h2>
-          ECHO Vision
-        </h2>
-
-        <p>
-
-          Start the camera and ECHO will
-          analyze the live scene.
-
-        </p>
-
-      </div>
-
+    <div class="controls">
+      <button class="btn" id="startBtn">START</button>
+      <button class="btn primary" id="seeBtn">SEE</button>
+      <button class="btn" id="readBtn">READ</button>
+      <button class="btn" id="captureBtn">CAPTURE</button>
     </div>
 
-
-    <div class="camera-tag">
-      LIVE VISION
+    <div class="controls">
+      <button class="btn" id="detectBtn">LIVE OBJECTS</button>
+      <button class="btn" id="locationBtn">LOCATE ME</button>
+      <button class="btn" id="placeBtn">IDENTIFY PLACE</button>
+      <button class="btn" id="routeBtn">GUIDE ME</button>
     </div>
 
-
-    <div
-      class="camera-live"
-      id="cameraLive">
-
-      LIVE
-
-    </div>
-
-
-    <div
-      class="scan-corners"
-      id="scanCorners">
-
-    </div>
-
-
-  </div>
-
-
-  <div class="camera-actions">
-
-
-    <button
-      class="btn"
-      id="cameraButton"
-      onclick="toggleCamera()">
-
-      START
-
-    </button>
-
-
-    <button
-      class="btn primary"
-      onclick="analyzeScene()">
-
-      SEE
-
-    </button>
-
-
-    <button
-      class="btn"
-      onclick="readCamera()">
-
-      READ
-
-    </button>
-
-
-    <button
-      class="btn"
-      onclick="captureFrame()">
-
-      CAPTURE
-
-    </button>
-
-
-  </div>
-
-
-  <div class="detection-status">
-
-    <span
-      class="detection-spinner"
-      id="detectionSpinner">
-    </span>
-
-    <span id="detectionStatus">
-
-      Camera idle
-
-    </span>
-
-  </div>
-
-
-  <div
-    class="result"
-    id="visionResult">
-
-    <div class="result-label">
-      LIVE VISION
-    </div>
-
-    <h3 id="visionTitle">
-      Nothing analyzed yet
-    </h3>
-
-    <p id="visionDescription">
-      Start the camera and press SEE.
-    </p>
-
-    <div
-      class="result-tags"
-      id="visionTags">
-    </div>
-
-
-    <div class="response-actions">
-
-      <button
-        class="mini-btn"
-        onclick="speakVisionResult()">
-
-        🔊 SPEAK
-
-      </button>
-
-
-      <button
-        class="mini-btn"
-        onclick="rememberScene()">
-
-        🧠 REMEMBER
-
-      </button>
-
-    </div>
-
-  </div>
-
-
-</section>
-
-
-<!-- =======================================================
-     VOICE
-======================================================= -->
-
-<section class="voice-card">
-
-
-  <div
-    class="voice-status"
-    id="voiceStatus">
-
-    ECHO is ready to listen
-
-  </div>
-
-
-  <button
-    class="voice-button"
-    id="voiceButton"
-    onclick="toggleVoice()">
-
-    🎙️
-
-  </button>
-
-
-  <div
-    class="voice-transcript"
-    id="voiceTranscript">
-
-    “Hey ECHO…”
-
-  </div>
-
-
-  <div class="voice-help">
-
-    Tap once and speak naturally
-
-  </div>
-
-
-  <div
-    class="response"
-    id="voiceResponse">
-
-    <div class="response-label">
-      ECHO
-    </div>
-
-    <div
-      class="response-text"
-      id="voiceResponseText">
-    </div>
-
-
-    <div class="response-actions">
-
-      <button
-        class="mini-btn"
-        onclick="repeatResponse()">
-
-        🔊 SPEAK AGAIN
-
-      </button>
-
-    </div>
-
-  </div>
-
-
-</section>
-
-
-<!-- =======================================================
-     FEATURES
-======================================================= -->
-
-<section class="section">
-
-
-  <div class="section-header">
-
-    <strong>
-      ECHO capabilities
-    </strong>
-
-    <span>
-      LIVE
-    </span>
-
-  </div>
-
-
-  <div class="feature-grid">
-
-
-    <button
-      class="feature"
-      onclick="openVisionSheet()">
-
-      <div class="feature-icon">
-        👁️
-      </div>
-
-      <strong>
-        See & Understand
-      </strong>
-
-      <small>
-        Detect objects from the live camera.
-      </small>
-
-    </button>
-
-
-    <button
-      class="feature"
-      onclick="openMemorySheet()">
-
-      <div class="feature-icon">
-        🧠
-      </div>
-
-      <strong>
-        Visual Memory
-      </strong>
-
-      <small>
-        Remember real observations from your camera.
-      </small>
-
-    </button>
-
-
-    <button
-      class="feature"
-      onclick="openReadSheet()">
-
-      <div class="feature-icon">
-        📖
-      </div>
-
-      <strong>
-        Read & Translate
-      </strong>
-
-      <small>
-        Extract real text from the camera.
-      </small>
-
-    </button>
-
-
-    <button
-      class="feature"
-      onclick="openLocationSheet()">
-
-      <div class="feature-icon">
-        📍
-      </div>
-
-      <strong>
-        Where am I?
-      </strong>
-
-      <small>
-        Use live GPS and location information.
-      </small>
-
-    </button>
-
-
-    <button
-      class="feature"
-      onclick="openGuideSheet()">
-
-      <div class="feature-icon">
-        🧭
-      </div>
-
-      <strong>
-        Guide Me
-      </strong>
-
-      <small>
-        Generate a live route to a destination.
-      </small>
-
-    </button>
-
-
-    <button
-      class="feature"
-      onclick="identifyPlace()">
-
-      <div class="feature-icon">
-        🏫
-      </div>
-
-      <strong>
-        Identify Place
-      </strong>
-
-      <small>
-        Read signs and search the location context.
-      </small>
-
-    </button>
-
-
-  </div>
-
-</section>
-
-
-<!-- =======================================================
-     MEMORY PREVIEW
-======================================================= -->
-
-<section class="section">
-
-
-  <div class="section-header">
-
-    <strong>
-      Your visual memory
-    </strong>
-
-    <span id="memoryCount">
-      0 saved
-    </span>
-
-  </div>
-
-
-  <div
-    class="memory-preview"
-    id="memoryPreview">
-
-    <div class="memory-empty">
-
-      ECHO hasn't remembered anything yet.
-      <br>
-      Capture something and say
-      <strong>“Remember this.”</strong>
-
-    </div>
-
-  </div>
-
-
-</section>
-
-
-<!-- =======================================================
-     ACCESSIBILITY
-======================================================= -->
-
-<div class="accessibility-card">
-
-  <div class="accessibility-icon">
-    ♿
-  </div>
-
-  <p>
-
-    ECHO is designed around voice-first interaction,
-    large controls, spoken feedback and minimal
-    dependence on complex visual interfaces.
-
-  </p>
-
-</div>
-
-
-</div>
-
-
-<!-- =======================================================
-     BOTTOM NAVIGATION
-======================================================= -->
-
-<nav class="bottom-nav">
-
-
-  <button
-    class="nav active"
-    onclick="goHome(this)">
-
-    ◉
-
-    <span>
-      HOME
-    </span>
-
-  </button>
-
-
-  <button
-    class="nav"
-    onclick="openMemorySheet();setActiveNav(this)">
-
-    🧠
-
-    <span>
-      MEMORY
-    </span>
-
-  </button>
-
-
-  <button
-    class="nav"
-    onclick="openHistorySheet();setActiveNav(this)">
-
-    💬
-
-    <span>
-      HISTORY
-    </span>
-
-  </button>
-
-
-  <button
-    class="nav"
-    onclick="openGuideSheet();setActiveNav(this)">
-
-    🧭
-
-    <span>
-      GUIDE
-    </span>
-
-  </button>
-
-
-</nav>
-
-
-<!-- =======================================================
-     VISION SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="visionSheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        See & Understand
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('visionSheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <p class="sheet-description">
-
-      ECHO uses live camera input to identify
-      common objects in your surroundings.
-
-    </p>
-
-
-    <button
-      class="sheet-button"
-      onclick="activateVision()">
-
-      <strong>
-        📷 Start live vision
-      </strong>
-
-      <p>
-        Open the camera and analyze the current scene.
-      </p>
-
-    </button>
-
-
-    <button
-      class="sheet-button"
-      onclick="closeSheet('visionSheet');analyzeScene()">
-
-      <strong>
-        👁️ Analyze current view
-      </strong>
-
-      <p>
-        Run the live object detector on the camera.
-      </p>
-
-    </button>
-
-
+    <div class="note" id="cameraNote">Camera is off.</div>
+  </section>
+
+  <section class="card voice">
+    <div class="voice-label" id="voiceLabel">ECHO IS READY TO LISTEN</div>
+    <button class="mic" id="micBtn" aria-label="Start voice listening">🎙️</button>
+    <div class="transcript" id="transcript">Tap the microphone and speak.</div>
+    <div class="response" id="response">Try: “What is in front of me?”, “Read this”, “Where am I?”, “Remember this”, or “Guide me to the library”.</div>
+  </section>
+
+  <div class="section-title"><b>ECHO CAPABILITIES</b><span id="engineStatus">LIVE</span></div>
+  <section class="grid">
+    <div class="feature"><div class="ico">👁️</div><b>See & Understand</b><span>Live camera + real object detection.</span></div>
+    <div class="feature"><div class="ico">🧠</div><b>Visual Memory</b><span>Save real scenes locally and search them later.</span></div>
+    <div class="feature"><div class="ico">📖</div><b>Read & Translate</b><span>OCR actual text from the camera and translate it.</span></div>
+    <div class="feature"><div class="ico">📍</div><b>Guide</b><span>Real GPS location and walking-route lookup.</span></div>
+  </section>
+
+  <div class="bottom">
+    <button id="homeBtn">⌂ HOME</button>
+    <button id="memoryBtn">🧠 MEMORY</button>
+    <button id="historyBtn">◷ HISTORY</button>
   </div>
 
 </div>
 
-
-<!-- =======================================================
-     MEMORY SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="memorySheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        Visual Memory
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('memorySheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <p class="sheet-description">
-
-      These memories are stored locally in this browser.
-      Capture something real and ask ECHO to remember it.
-
-    </p>
-
-
-    <div id="memoryList">
-
-    </div>
-
-
+<div class="sheet" id="sheet">
+  <div class="sheet-inner">
+    <div class="sheet-head"><b id="sheetTitle">MEMORY</b><button class="close" id="closeSheet">CLOSE</button></div>
+    <div id="sheetContent"></div>
   </div>
-
 </div>
 
-
-<!-- =======================================================
-     READ SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="readSheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        Read & Translate
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('readSheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <p class="sheet-description">
-
-      Point the camera at a notice, book, label,
-      menu or sign. ECHO will extract the actual
-      text from the image.
-
-    </p>
-
-
-    <div class="ocr-preview">
-
-      <div
-        class="document-demo"
-        id="documentDemo">
-
-        <div class="doc-title"></div>
-
-        <div class="doc-line"></div>
-
-        <div class="doc-line"></div>
-
-        <div
-          class="doc-line"
-          style="width:75%;">
-        </div>
-
-        <div
-          class="doc-line"
-          style="width:88%;">
-        </div>
-
-        <div
-          class="doc-line"
-          style="width:58%;">
-        </div>
-
-      </div>
-
-
-      <img
-        class="ocr-image"
-        id="ocrImage"
-        alt="Captured text"
-      >
-
-    </div>
-
-
-    <div class="ocr-controls">
-
-
-      <button
-        class="btn primary"
-        onclick="readCamera()">
-
-        📖 READ CAMERA
-
-      </button>
-
-
-      <button
-        class="btn"
-        onclick="captureFrame();readCamera()">
-
-        📸 CAPTURE + READ
-
-      </button>
-
-
-    </div>
-
-
-    <div
-      class="language-row">
-
-      <select
-        class="language-select"
-        id="targetLanguage">
-
-        <option value="ta">
-          Tamil
-        </option>
-
-        <option value="hi">
-          Hindi
-        </option>
-
-        <option value="te">
-          Telugu
-        </option>
-
-        <option value="ml">
-          Malayalam
-        </option>
-
-        <option value="kn">
-          Kannada
-        </option>
-
-        <option value="fr">
-          French
-        </option>
-
-        <option value="de">
-          German
-        </option>
-
-        <option value="es">
-          Spanish
-        </option>
-
-      </select>
-
-
-      <div class="language-arrow">
-        →
-      </div>
-
-
-      <button
-        class="btn primary"
-        onclick="translateOCR()">
-
-        🌐 TRANSLATE
-
-      </button>
-
-    </div>
-
-
-    <div
-      class="ocr-result"
-      id="ocrResult">
-
-      <div class="ocr-label">
-        LIVE OCR
-      </div>
-
-      <div
-        class="ocr-result-text"
-        id="ocrText">
-
-      </div>
-
-    </div>
-
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     LOCATION SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="locationSheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        Where am I?
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('locationSheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <p class="sheet-description">
-
-      ECHO can request your current GPS position
-      and turn it into a human-readable location.
-
-    </p>
-
-
-    <div
-      class="location-card"
-      id="locationCard">
-
-      <div class="location-big">
-        Location not requested
-      </div>
-
-      <div class="location-small">
-        Tap the button below to request your live position.
-      </div>
-
-    </div>
-
-
-    <button
-      class="sheet-button primary"
-      onclick="locateMe()">
-
-      <strong>
-        📍 USE MY CURRENT LOCATION
-      </strong>
-
-      <p>
-        Your browser will ask for permission.
-      </p>
-
-    </button>
-
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     GUIDE SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="guideSheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        Guide Me
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('guideSheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <p class="sheet-description">
-
-      Enter a destination. ECHO will use your live
-      GPS position and request a walking route.
-
-    </p>
-
-
-    <input
-      id="destinationInput"
-      class="destination-input"
-      type="text"
-      placeholder="e.g. Bannari Amman Institute of Technology"
-    >
-
-
-    <button
-      class="route-button"
-      onclick="buildRoute()">
-
-      🧭 CREATE LIVE ROUTE
-
-    </button>
-
-
-    <div
-      id="map">
-    </div>
-
-
-    <div
-      class="route-info"
-      id="routeInfo">
-
-      <strong id="routeSummary">
-      </strong>
-
-      <p id="routeDescription">
-      </p>
-
-
-      <div
-        class="turn-list"
-        id="turnList">
-      </div>
-
-    </div>
-
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     HISTORY SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="historySheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-
-    <div class="sheet-header">
-
-      <h2>
-        ECHO History
-      </h2>
-
-      <button
-        class="close"
-        onclick="closeSheet('historySheet')">
-
-        ×
-
-      </button>
-
-    </div>
-
-
-    <div id="historyList">
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     LOADING
-======================================================= -->
-
-<div
-  class="loading-overlay"
-  id="loadingOverlay">
-
-  <div class="loading-card">
-
-    <div class="loader"></div>
-
-    <h3
-      id="loadingTitle">
-
-      Processing…
-
-    </h3>
-
-    <p
-      id="loadingText">
-
-      ECHO is working with the live input.
-
-    </p>
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     TOAST
-======================================================= -->
-
-<div
-  class="toast"
-  id="toast">
-</div>
-
+<div class="toast" id="toast"></div>
 
 <script>
+"use strict";
 
-/* =========================================================
-   ECHO STATE
-========================================================= */
+const $ = id => document.getElementById(id);
 
-let cameraStream = null;
+const state = {
+  stream: null,
+  detector: null,
+  detecting: false,
+  detectionTimer: null,
+  lastObjects: [],
+  lastText: "",
+  lastLocation: null,
+  memories: JSON.parse(localStorage.getItem("echo_memories") || "[]"),
+  history: JSON.parse(localStorage.getItem("echo_history") || "[]"),
+  recognition: null,
+  listening: false,
+  ocrBusy: false
+};
 
-let detector = null;
-
-let detectorLoading = false;
-
-let detectionTimer = null;
-
-let recognition = null;
-
-let listening = false;
-
-let currentDetections = [];
-
-let lastCapturedData = null;
-
-let lastOCRText = "";
-
-let lastVisionText = "";
-
-let currentLocation = null;
-
-let map = null;
-
-let routeLayer = null;
-
-let tesseractWorker = null;
-
-let tesseractLoading = false;
-
-
-let memories =
-  JSON.parse(
-    localStorage.getItem(
-      "echo_memories"
-    ) || "[]"
-  );
-
-
-let history =
-  JSON.parse(
-    localStorage.getItem(
-      "echo_history"
-    ) || "[]"
-  );
-
-
-/* =========================================================
-   DOM
-========================================================= */
-
-const $ = id =>
-  document.getElementById(id);
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-function setStatus(
-  text,
-  mode = "ready"
-) {
-
-  $("systemStatus").textContent =
-    text;
-
-  const dot =
-    $("statusDot");
-
-  dot.classList.remove(
-    "busy",
-    "error"
-  );
-
-  if(mode === "busy") {
-
-    dot.classList.add(
-      "busy"
-    );
-
-  }
-
-  if(mode === "error") {
-
-    dot.classList.add(
-      "error"
-    );
-
-  }
-
+function setStatus(text, kind="") {
+  $("statusText").textContent = text;
+  $("statusText").className = kind;
 }
 
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-function toast(message) {
-
-  const element =
-    $("toast");
-
-  element.textContent =
-    message;
-
-  element.classList.add(
-    "show"
-  );
-
-  clearTimeout(
-    window.echoToast
-  );
-
-  window.echoToast =
-    setTimeout(
-      () => {
-
-        element.classList.remove(
-          "show"
-        );
-
-      },
-      2800
-    );
-
+function toast(message, kind="") {
+  const t = $("toast");
+  t.textContent = message;
+  t.className = "toast show";
+  if (kind) t.classList.add(kind);
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => t.className = "toast", 2800);
 }
 
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-function loading(
-  show,
-  title = "",
-  text = ""
-) {
-
-  if(show) {
-
-    $("loadingTitle")
-      .textContent =
-      title;
-
-    $("loadingText")
-      .textContent =
-      text;
-
-    $("loadingOverlay")
-      .classList.add(
-        "show"
-      );
-
-  }
-
-  else {
-
-    $("loadingOverlay")
-      .classList.remove(
-        "show"
-      );
-
-  }
-
-}
-
-
-/* =========================================================
-   SHEETS
-========================================================= */
-
-function openSheet(id) {
-
-  $(id)
-    .classList
-    .add("open");
-
-}
-
-
-function closeSheet(id) {
-
-  $(id)
-    .classList
-    .remove("open");
-
-}
-
-
-document
-  .querySelectorAll(
-    ".sheet-backdrop"
-  )
-  .forEach(
-    sheet => {
-
-      sheet.addEventListener(
-        "click",
-        event => {
-
-          if(
-            event.target === sheet
-          ) {
-
-            sheet
-              .classList
-              .remove("open");
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-
-/* =========================================================
-   CAMERA
-========================================================= */
-
-async function toggleCamera() {
-
-  if(cameraStream) {
-
-    stopCamera();
-
-    return;
-
-  }
-
-
-  if(
-    !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
-  ) {
-
-    toast(
-      "This browser does not support camera access."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    setStatus(
-      "STARTING CAMERA",
-      "busy"
-    );
-
-
-    cameraStream =
-      await navigator
-        .mediaDevices
-        .getUserMedia({
-
-          video: {
-
-            facingMode: {
-              ideal: "environment"
-            },
-
-            width: {
-              ideal: 1280
-            },
-
-            height: {
-              ideal: 720
-            }
-
-          },
-
-          audio:
-            false
-
-        });
-
-
-    const video =
-      $("video");
-
-
-    video.srcObject =
-      cameraStream;
-
-
-    await video.play();
-
-
-    $("cameraEmpty")
-      .style
-      .display =
-      "none";
-
-
-    video.style.display =
-      "block";
-
-
-    $("cameraLive")
-      .classList
-      .add("show");
-
-
-    $("scanCorners")
-      .classList
-      .add("show");
-
-
-    $("cameraButton")
-      .textContent =
-      "STOP";
-
-
-    setStatus(
-      "CAMERA READY"
-    );
-
-
-    $("detectionStatus")
-      .textContent =
-      "Live camera ready";
-
-
-    resizeOverlay();
-
-
-    toast(
-      "Camera is live."
-    );
-
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-    cameraStream =
-      null;
-
-    setStatus(
-      "CAMERA ERROR",
-      "error"
-    );
-
-
-    toast(
-      "Camera permission was not granted."
-    );
-
-  }
-
-}
-
-
-function stopCamera() {
-
-  stopLiveDetection();
-
-
-  if(cameraStream) {
-
-    cameraStream
-      .getTracks()
-      .forEach(
-        track =>
-          track.stop()
-      );
-
-  }
-
-
-  cameraStream =
-    null;
-
-
-  $("video")
-    .srcObject =
-    null;
-
-
-  $("video")
-    .style
-    .display =
-    "none";
-
-
-  $("cameraEmpty")
-    .style
-    .display =
-    "flex";
-
-
-  $("cameraLive")
-    .classList
-    .remove(
-      "show"
-    );
-
-
-  $("scanCorners")
-    .classList
-    .remove(
-      "show"
-    );
-
-
-  $("cameraButton")
-    .textContent =
-    "START";
-
-
-  clearOverlay();
-
-
-  setStatus(
-    "READY"
-  );
-
-
-  $("detectionStatus")
-    .textContent =
-    "Camera idle";
-
-}
-
-
-function resizeOverlay() {
-
-  const video =
-    $("video");
-
-  const canvas =
-    $("overlay");
-
-
-  if(
-    !video.videoWidth
-  ) {
-
-    return;
-
-  }
-
-
-  canvas.width =
-    video.videoWidth;
-
-  canvas.height =
-    video.videoHeight;
-
-}
-
-
-window.addEventListener(
-  "resize",
-  resizeOverlay
-);
-
-
-/* =========================================================
-   CAPTURE REAL FRAME
-========================================================= */
-
-function captureFrame() {
-
-  if(!cameraStream) {
-
-    toast(
-      "Start the camera first."
-    );
-
-    return null;
-
-  }
-
-
-  const video =
-    $("video");
-
-
-  if(
-    video.readyState < 2
-  ) {
-
-    toast(
-      "Camera is not ready yet."
-    );
-
-    return null;
-
-  }
-
-
-  const canvas =
-    document.createElement(
-      "canvas"
-    );
-
-
-  canvas.width =
-    video.videoWidth;
-
-
-  canvas.height =
-    video.videoHeight;
-
-
-  const context =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  context.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  lastCapturedData =
-    canvas.toDataURL(
-      "image/jpeg",
-      .85
-    );
-
-
-  toast(
-    "Live frame captured."
-  );
-
-
-  return lastCapturedData;
-
-}
-
-
-/* =========================================================
-   TENSORFLOW OBJECT DETECTION
-========================================================= */
-
-async function loadDetector() {
-
-  if(detector) {
-
-    return detector;
-
-  }
-
-
-  if(detectorLoading) {
-
-    while(
-      detectorLoading
-    ) {
-
-      await sleep(
-        200
-      );
-
-    }
-
-    return detector;
-
-  }
-
-
-  detectorLoading =
-    true;
-
-
-  try {
-
-    setStatus(
-      "LOADING VISION",
-      "busy"
-    );
-
-
-    $("detectionStatus")
-      .textContent =
-      "Loading live vision model…";
-
-
-    detector =
-      await cocoSsd.load({
-        base: "lite_mobilenet_v2"
-      });
-
-
-    setStatus(
-      "VISION READY"
-    );
-
-
-    $("detectionStatus")
-      .textContent =
-      "Live object detection ready";
-
-
-    return detector;
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    setStatus(
-      "VISION ERROR",
-      "error"
-    );
-
-
-    toast(
-      "The vision model could not load."
-    );
-
-
-    return null;
-
-  }
-
-  finally {
-
-    detectorLoading =
-      false;
-
-  }
-
-}
-
-
-/* =========================================================
-   ANALYZE LIVE CAMERA
-========================================================= */
-
-async function analyzeScene() {
-
-  if(!cameraStream) {
-
-    await toggleCamera();
-
-    if(!cameraStream) {
-
-      return;
-
-    }
-
-  }
-
-
-  const model =
-    await loadDetector();
-
-
-  if(!model) {
-
-    return;
-
-  }
-
-
-  const video =
-    $("video");
-
-
-  if(
-    video.readyState < 2
-  ) {
-
-    toast(
-      "Camera is still starting."
-    );
-
-    return;
-
-  }
-
-
-  setStatus(
-    "ANALYZING",
-    "busy"
-  );
-
-
-  $("detectionSpinner")
-    .classList
-    .add("show");
-
-
-  $("detectionStatus")
-    .textContent =
-    "Analyzing the live camera…";
-
-
-  try {
-
-    const predictions =
-      await model.detect(
-        video,
-        20
-      );
-
-
-    currentDetections =
-      predictions
-        .filter(
-          item =>
-            item.score >= .45
-        );
-
-
-    drawDetections(
-      currentDetections
-    );
-
-
-    const labels =
-      uniqueLabels(
-        currentDetections
-      );
-
-
-    let title =
-      "I don't recognize a clear object yet.";
-
-
-    let description =
-      "Try moving the camera closer or improving the lighting.";
-
-
-    if(labels.length) {
-
-      title =
-        describeObjects(
-          labels
-        );
-
-
-      description =
-        "I detected these objects from your live camera view.";
-
-    }
-
-
-    $("visionTitle")
-      .textContent =
-      title;
-
-
-    $("visionDescription")
-      .textContent =
-      description;
-
-
-    renderTags(
-      labels
-    );
-
-
-    $("visionResult")
-      .classList
-      .add("show");
-
-
-    lastVisionText =
-      title +
-      " " +
-      description;
-
-
-    addHistory(
-      "ECHO",
-      lastVisionText
-    );
-
-
-    setStatus(
-      "VISION READY"
-    );
-
-
-    $("detectionStatus")
-      .textContent =
-      labels.length
-        ? labels.join(", ")
-        : "No confident object detected";
-
-
-    speak(
-      labels.length
-        ? title
-        : "I couldn't confidently identify an object in the current view."
-    );
-
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      "Live vision analysis failed."
-    );
-
-
-    setStatus(
-      "VISION ERROR",
-      "error"
-    );
-
-  }
-
-  finally {
-
-    $("detectionSpinner")
-      .classList
-      .remove("show");
-
-  }
-
-}
-
-
-function uniqueLabels(
-  predictions
-) {
-
-  return [
-    ...new Set(
-      predictions.map(
-        item =>
-          item.class
-      )
-    )
-  ];
-
-}
-
-
-function describeObjects(
-  labels
-) {
-
-  if(labels.length === 1) {
-
-    return:
-      "I can see a " +
-      articleFor(labels[0]) +
-      " " +
-      labels[0] +
-      ".";
-
-  }
-
-
-  if(labels.length === 2) {
-
-    return:
-      "I can see " +
-      articleFor(labels[0]) +
-      " " +
-      labels[0] +
-      " and " +
-      articleFor(labels[1]) +
-      " " +
-      labels[1] +
-      ".";
-
-  }
-
-
-  return:
-    "I can see " +
-    labels
-      .slice(0,5)
-      .map(
-        label =>
-          articleFor(label) +
-          " " +
-          label
-      )
-      .join(", ") +
-    ".";
-
-}
-
-
-function articleFor(
-  word
-) {
-
-  const first =
-    word
-      .trim()
-      .charAt(0)
-      .toLowerCase();
-
-
-  return "aeiou".includes(first)
-    ? "an"
-    : "a";
-
-}
-
-
-/* =========================================================
-   DRAW DETECTIONS
-========================================================= */
-
-function drawDetections(
-  predictions
-) {
-
-  const canvas =
-    $("overlay");
-
-
-  const context =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  clearOverlay();
-
-
-  const video =
-    $("video");
-
-
-  if(
-    !video.videoWidth ||
-    !video.videoHeight
-  ) {
-
-    return;
-
-  }
-
-
-  const scaleX =
-    canvas.width /
-    video.videoWidth;
-
-
-  const scaleY =
-    canvas.height /
-    video.videoHeight;
-
-
-  predictions
-    .forEach(
-      prediction => {
-
-        const [
-          x,
-          y,
-          width,
-          height
-        ] =
-          prediction.bbox;
-
-
-        const sx =
-          x * scaleX;
-
-
-        const sy =
-          y * scaleY;
-
-
-        const sw =
-          width * scaleX;
-
-
-        const sh =
-          height * scaleY;
-
-
-        context.strokeStyle =
-          "#a8ff63";
-
-
-        context.lineWidth =
-          Math.max(
-            2,
-            canvas.width / 500
-          );
-
-
-        context.strokeRect(
-          sx,
-          sy,
-          sw,
-          sh
-        );
-
-
-        const label =
-          prediction.class +
-          " " +
-          Math.round(
-            prediction.score * 100
-          ) +
-          "%";
-
-
-        context.font =
-          "600 14px -apple-system, BlinkMacSystemFont, sans-serif";
-
-
-        const textWidth =
-          context.measureText(
-            label
-          ).width;
-
-
-        context.fillStyle =
-          "rgba(0,0,0,.75)";
-
-
-        context.fillRect(
-          sx,
-          Math.max(
-            0,
-            sy - 25
-          ),
-          textWidth + 14,
-          25
-        );
-
-
-        context.fillStyle =
-          "#a8ff63";
-
-
-        context.fillText(
-          label,
-          sx + 7,
-          Math.max(
-            17,
-            sy - 8
-          )
-        );
-
-      }
-    );
-
-}
-
-
-function clearOverlay() {
-
-  const canvas =
-    $("overlay");
-
-
-  const context =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  context.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-}
-
-
-/* =========================================================
-   LIVE DETECTION MODE
-========================================================= */
-
-async function startLiveDetection() {
-
-  if(!cameraStream) {
-
-    await toggleCamera();
-
-  }
-
-
-  if(!cameraStream) {
-
-    return;
-
-  }
-
-
-  const model =
-    await loadDetector();
-
-
-  if(!model) {
-
-    return;
-
-  }
-
-
-  stopLiveDetection();
-
-
-  $("detectionStatus")
-    .textContent =
-    "Live detection running…";
-
-
-  detectionTimer =
-    setInterval(
-      async () => {
-
-        if(
-          !cameraStream ||
-          detectorLoading
-        ) {
-
-          return;
-
-        }
-
-
-        try {
-
-          const predictions =
-            await detector.detect(
-              $("video"),
-              15
-            );
-
-
-          currentDetections =
-            predictions.filter(
-              item =>
-                item.score >= .5
-            );
-
-
-          drawDetections(
-            currentDetections
-          );
-
-
-        }
-
-        catch(error) {
-
-          console.error(
-            error
-          );
-
-        }
-
-      },
-      1200
-    );
-
-}
-
-
-function stopLiveDetection() {
-
-  if(detectionTimer) {
-
-    clearInterval(
-      detectionTimer
-    );
-
-    detectionTimer =
-      null;
-
-  }
-
-}
-
-
-/* =========================================================
-   OCR
-========================================================= */
-
-async function getOCRWorker() {
-
-  if(tesseractWorker) {
-
-    return tesseractWorker;
-
-  }
-
-
-  if(tesseractLoading) {
-
-    while(
-      tesseractLoading
-    ) {
-
-      await sleep(
-        200
-      );
-
-    }
-
-    return tesseractWorker;
-
-  }
-
-
-  tesseractLoading =
-    true;
-
-
-  try {
-
-    setStatus(
-      "LOADING OCR",
-      "busy"
-    );
-
-
-    tesseractWorker =
-      await Tesseract.createWorker(
-        "eng"
-      );
-
-
-    setStatus(
-      "OCR READY"
-    );
-
-
-    return tesseractWorker;
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      "OCR model could not load."
-    );
-
-
-    return null;
-
-  }
-
-  finally {
-
-    tesseractLoading =
-      false;
-
-  }
-
-}
-
-
-async function readCamera() {
-
-  if(!cameraStream) {
-
-    await toggleCamera();
-
-  }
-
-
-  if(!cameraStream) {
-
-    return;
-
-  }
-
-
-  const image =
-    captureFrame();
-
-
-  if(!image) {
-
-    return;
-
-  }
-
-
-  openSheet(
-    "readSheet"
-  );
-
-
-  $("ocrImage")
-    .src =
-    image;
-
-
-  $("ocrImage")
-    .style
-    .display =
-    "block";
-
-
-  $("documentDemo")
-    .style
-    .display =
-    "none";
-
-
-  const worker =
-    await getOCRWorker();
-
-
-  if(!worker) {
-
-    return;
-
-  }
-
-
-  loading(
-    true,
-    "Reading the live frame",
-    "ECHO is extracting visible text…"
-  );
-
-
-  setStatus(
-    "READING",
-    "busy"
-  );
-
-
-  try {
-
-    const result =
-      await worker.recognize(
-        image
-      );
-
-
-    const text =
-      result.data.text
-        .replace(
-          /\s+/g,
-          " "
-        )
-        .trim();
-
-
-    lastOCRText =
-      text;
-
-
-    $("ocrResult")
-      .classList
-      .add("show");
-
-
-    $("ocrText")
-      .textContent =
-      text ||
-      "No clear text was detected. Try moving closer or improving the lighting.";
-
-
-    if(text) {
-
-      addHistory(
-        "ECHO",
-        "Read: " + text
-      );
-
-
-      speak(
-        text
-      );
-
-
-      toast(
-        "Live text detected."
-      );
-
-    }
-
-    else {
-
-      speak(
-        "I couldn't find clear text in the image."
-      );
-
-    }
-
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      "OCR failed on this frame."
-    );
-
-  }
-
-  finally {
-
-    loading(
-      false
-    );
-
-    setStatus(
-      "READY"
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   TRANSLATION
-========================================================= */
-
-async function translateOCR() {
-
-  if(!lastOCRText) {
-
-    toast(
-      "Read some text first."
-    );
-
-    return;
-
-  }
-
-
-  const target =
-    $("targetLanguage")
-      .value;
-
-
-  loading(
-    true,
-    "Translating live text",
-    "ECHO is translating the text you just captured…"
-  );
-
-
-  try {
-
-    const url =
-      "https://api.mymemory.translated.net/get" +
-      "?q=" +
-      encodeURIComponent(
-        lastOCRText
-      ) +
-      "&langpair=auto|" +
-      encodeURIComponent(
-        target
-      );
-
-
-    const response =
-      await fetch(
-        url
-      );
-
-
-    if(!response.ok) {
-
-      throw new Error(
-        "Translation request failed"
-      );
-
-    }
-
-
-    const data =
-      await response.json();
-
-
-    const translated =
-      data
-        ?.responseData
-        ?.translatedText;
-
-
-    if(!translated) {
-
-      throw new Error(
-        "No translation returned"
-      );
-
-    }
-
-
-    $("ocrText")
-      .textContent =
-      translated;
-
-
-    addHistory(
-      "ECHO",
-      "Translation: " +
-      translated
-    );
-
-
-    speak(
-      translated
-    );
-
-
-    toast(
-      "Live translation complete."
-    );
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      "Translation service unavailable. Try again."
-    );
-
-  }
-
-  finally {
-
-    loading(
-      false
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   PLACE IDENTIFICATION
-========================================================= */
-
-async function identifyPlace() {
-
-  if(!cameraStream) {
-
-    await toggleCamera();
-
-  }
-
-
-  if(!cameraStream) {
-
-    return;
-
-  }
-
-
-  const image =
-    captureFrame();
-
-
-  if(!image) {
-
-    return;
-
-  }
-
-
-  const worker =
-    await getOCRWorker();
-
-
-  if(!worker) {
-
-    return;
-
-  }
-
-
-  loading(
-    true,
-    "Identifying the place",
-    "Reading visible signs and checking location context…"
-  );
-
-
-  try {
-
-    const result =
-      await worker.recognize(
-        image
-      );
-
-
-    const text =
-      result.data.text
-        .replace(
-          /\s+/g,
-          " "
-        )
-        .trim();
-
-
-    if(!text) {
-
-      toast(
-        "I couldn't read a useful sign from the camera."
-      );
-
-
-      speak(
-        "I couldn't read a useful sign. Try pointing at a clearer sign or building name."
-      );
-
-
-      return;
-
-    }
-
-
-    /*
-      Search the extracted sign text
-      through Nominatim.
-    */
-
-    const searchUrl =
-      "https://nominatim.openstreetmap.org/search" +
-      "?format=jsonv2" +
-      "&limit=3" +
-      "&q=" +
-      encodeURIComponent(
-        text.slice(0,120)
-      );
-
-
-    const response =
-      await fetch(
-        searchUrl
-      );
-
-
-    if(!response.ok) {
-
-      throw new Error(
-        "Place lookup failed"
-      );
-
-    }
-
-
-    const places =
-      await response.json();
-
-
-    if(!places.length) {
-
-      speak(
-        "I read this from the sign: " +
-        text +
-        ". I couldn't find a matching place in the location database."
-      );
-
-
-      toast(
-        "Text found, but no matching place."
-      );
-
-
-      return;
-
-    }
-
-
-    const place =
-      places[0];
-
-
-    const responseText =
-      "I read " +
-      text +
-      ". A matching place is " +
-      place.display_name +
-      ".";
-
-
-    addHistory(
-      "ECHO",
-      responseText
-    );
-
-
-    speak(
-      responseText
-    );
-
-
-    showVoiceResponse(
-      responseText
-    );
-
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      "Place identification failed."
-    );
-
-  }
-
-  finally {
-
-    loading(
-      false
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   LOCATION
-========================================================= */
-
-function locateMe() {
-
-  if(
-    !navigator.geolocation
-  ) {
-
-    toast(
-      "Geolocation is not supported."
-    );
-
-    return;
-
-  }
-
-
-  setStatus(
-    "LOCATING",
-    "busy"
-  );
-
-
-  $("locationCard")
-    .innerHTML = `
-
-      <div class="location-big">
-        Finding you…
-      </div>
-
-      <div class="location-small">
-        Waiting for the device location.
-      </div>
-
-    `;
-
-
-  navigator.geolocation.getCurrentPosition(
-
-    async position => {
-
-      currentLocation = {
-
-        lat:
-          position.coords.latitude,
-
-        lon:
-          position.coords.longitude,
-
-        accuracy:
-          position.coords.accuracy
-
-      };
-
-
-      try {
-
-        const place =
-          await reverseGeocode(
-            currentLocation.lat,
-            currentLocation.lon
-          );
-
-
-        renderLocation(
-          place
-        );
-
-
-      }
-
-      catch(error) {
-
-        renderLocation(
-          null
-        );
-
-      }
-
-
-      setStatus(
-        "LOCATION READY"
-      );
-
-    },
-
-    error => {
-
-      console.error(
-        error
-      );
-
-
-      $("locationCard")
-        .innerHTML = `
-
-          <div class="location-big">
-            Location unavailable
-          </div>
-
-          <div class="location-small">
-            Allow location access and try again.
-          </div>
-
-        `;
-
-
-      setStatus(
-        "LOCATION ERROR",
-        "error"
-      );
-
-
-      toast(
-        "Location permission was not granted."
-      );
-
-    },
-
-    {
-
-      enableHighAccuracy:
-        true,
-
-      timeout:
-        15000,
-
-      maximumAge:
-        0
-
-    }
-
-  );
-
-}
-
-
-async function reverseGeocode(
-  lat,
-  lon
-) {
-
-  const url =
-    "https://nominatim.openstreetmap.org/reverse" +
-    "?format=jsonv2" +
-    "&lat=" +
-    encodeURIComponent(lat) +
-    "&lon=" +
-    encodeURIComponent(lon) +
-    "&zoom=18" +
-    "&addressdetails=1";
-
-
-  const response =
-    await fetch(
-      url
-    );
-
-
-  if(!response.ok) {
-
-    throw new Error(
-      "Reverse geocoding failed"
-    );
-
-  }
-
-
-  return await response.json();
-
-}
-
-
-function renderLocation(
-  place
-) {
-
-  if(!currentLocation) {
-
-    return;
-
-  }
-
-
-  const address =
-    place
-      ?.display_name ||
-      "Location coordinates available";
-
-
-  $("locationCard")
-    .innerHTML = `
-
-      <div class="location-big">
-        ${escapeHtml(
-          address.split(",").slice(0,2).join(",")
-        )}
-      </div>
-
-      <div class="location-small">
-        ${escapeHtml(address)}
-      </div>
-
-      <div class="coordinate-row">
-
-        <div class="coordinate">
-          LAT<br>
-          ${currentLocation.lat.toFixed(6)}
-        </div>
-
-        <div class="coordinate">
-          LON<br>
-          ${currentLocation.lon.toFixed(6)}
-        </div>
-
-      </div>
-
-    `;
-
-
-  const spoken =
-    "You are near " +
-    address.split(",").slice(0,3).join(", ") +
-    ".";
-
-
-  speak(
-    spoken
-  );
-
-
-  addHistory(
-    "ECHO",
-    spoken
-  );
-
-}
-
-
-/* =========================================================
-   ROUTING
-========================================================= */
-
-async function buildRoute() {
-
-  const destination =
-    $("destinationInput")
-      .value
-      .trim();
-
-
-  if(!destination) {
-
-    toast(
-      "Enter a destination first."
-    );
-
-    return;
-
-  }
-
-
-  loading(
-    true,
-    "Creating your route",
-    "Getting your location and finding the destination…"
-  );
-
-
-  try {
-
-    if(!currentLocation) {
-
-      await getLocationPromise();
-
-    }
-
-
-    if(!currentLocation) {
-
-      throw new Error(
-        "Current location unavailable"
-      );
-
-    }
-
-
-    const destinationData =
-      await geocodeDestination(
-        destination
-      );
-
-
-    if(
-      !destinationData
-    ) {
-
-      throw new Error(
-        "Destination not found"
-      );
-
-    }
-
-
-    const route =
-      await requestRoute(
-        currentLocation,
-        {
-
-          lat:
-            Number(
-              destinationData.lat
-            ),
-
-          lon:
-            Number(
-              destinationData.lon
-            )
-
-        }
-      );
-
-
-    renderRoute(
-      route,
-      destinationData
-    );
-
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-
-    toast(
-      error.message ||
-      "Could not create route."
-    );
-
-  }
-
-  finally {
-
-    loading(
-      false
-    );
-
-  }
-
-}
-
-
-function getLocationPromise() {
-
-  return new Promise(
-    resolve => {
-
-      if(
-        !navigator.geolocation
-      ) {
-
-        resolve(
-          null
-        );
-
-        return;
-
-      }
-
-
-      navigator.geolocation.getCurrentPosition(
-
-        position => {
-
-          currentLocation = {
-
-            lat:
-              position.coords.latitude,
-
-            lon:
-              position.coords.longitude,
-
-            accuracy:
-              position.coords.accuracy
-
-          };
-
-
-          resolve(
-            currentLocation
-          );
-
-        },
-
-        () => {
-
-          resolve(
-            null
-          );
-
-        },
-
-        {
-
-          enableHighAccuracy:
-            true,
-
-          timeout:
-            15000,
-
-          maximumAge:
-            0
-
-        }
-
-      );
-
-    }
-  );
-
-}
-
-
-async function geocodeDestination(
-  query
-) {
-
-  const url =
-    "https://nominatim.openstreetmap.org/search" +
-    "?format=jsonv2" +
-    "&limit=1" +
-    "&q=" +
-    encodeURIComponent(
-      query
-    );
-
-
-  const response =
-    await fetch(
-      url
-    );
-
-
-  if(!response.ok) {
-
-    throw new Error(
-      "Destination lookup failed."
-    );
-
-  }
-
-
-  const data =
-    await response.json();
-
-
-  if(!data.length) {
-
-    throw new Error(
-      "Destination not found."
-    );
-
-  }
-
-
-  return data[0];
-
-}
-
-
-async function requestRoute(
-  from,
-  to
-) {
-
-  /*
-    OSRM route API.
-
-    We request walking first.
-    If the public server doesn't expose
-    the walking profile, fall back to driving
-    so the map still demonstrates live routing.
-  */
-
-  const profiles =
-    [
-      "foot",
-      "driving"
-    ];
-
-
-  for(
-    const profile of profiles
-  ) {
-
-    try {
-
-      const url =
-        "https://router.project-osrm.org/route/v1/" +
-        profile +
-        "/" +
-        from.lon +
-        "," +
-        from.lat +
-        ";" +
-        to.lon +
-        "," +
-        to.lat +
-        "?overview=full" +
-        "&geometries=geojson" +
-        "&steps=true";
-
-
-      const response =
-        await fetch(
-          url
-        );
-
-
-      if(!response.ok) {
-
-        continue;
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      if(
-        data.code === "Ok" &&
-        data.routes?.length
-      ) {
-
-        return {
-
-          profile,
-          route:
-            data.routes[0]
-
-        };
-
-      }
-
-    }
-
-    catch(error) {
-
-      console.error(
-        error
-      );
-
-    }
-
-  }
-
-
-  throw new Error(
-    "No route could be calculated."
-  );
-
-}
-
-
-function renderRoute(
-  data,
-  destination
-) {
-
-  $("map")
-    .style
-    .display =
-    "block";
-
-
-  $("routeInfo")
-    .classList
-    .add("show");
-
-
-  if(!map) {
-
-    map =
-      L.map(
-        "map"
-      );
-
-
-    L.tileLayer(
-
-      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-      {
-
-        maxZoom:
-          19,
-
-        attribution:
-          "&copy; OpenStreetMap contributors"
-
-      }
-
-    )
-    .addTo(
-      map
-    );
-
-  }
-
-
-  if(routeLayer) {
-
-    routeLayer.remove();
-
-  }
-
-
-  const route =
-    data.route;
-
-
-  routeLayer =
-    L.geoJSON(
-      {
-
-        type:
-          "Feature",
-
-        geometry:
-          route.geometry,
-
-        properties:
-          {}
-
-      },
-
-      {
-
-        style:
-          {
-
-            color:
-              "#7dcc55",
-
-            weight:
-              6,
-
-            opacity:
-              .9
-
-          }
-
-      }
-
-    )
-    .addTo(
-      map
-    );
-
-
-  const bounds =
-    routeLayer.getBounds();
-
-
-  map.fitBounds(
-    bounds,
-    {
-      padding:
-        [25,25]
-    }
-  );
-
-
-  const distanceKm =
-    route.distance /
-    1000;
-
-
-  const minutes =
-    Math.round(
-      route.duration /
-      60
-    );
-
-
-  $("routeSummary")
-    .textContent =
-    destination.display_name
-      .split(",")
-      .slice(0,2)
-      .join(", ");
-
-
-  $("routeDescription")
-    .textContent =
-    Math.max(
-      .1,
-      distanceKm
-    ).toFixed(2) +
-    " km · approximately " +
-    minutes +
-    " minutes · " +
-    data.profile +
-    " route";
-
-
-  const steps =
-    route.legs
-      ?.flatMap(
-        leg =>
-          leg.steps || []
-      )
-      .slice(0,8) ||
-    [];
-
-
-  $("turnList")
-    .innerHTML =
-    steps.length
-      ? steps.map(
-          step => `
-
-            <div class="turn">
-
-              ${escapeHtml(
-                step.maneuver?.type ||
-                "Continue"
-              )}
-
-              ·
-
-              ${escapeHtml(
-                step.name ||
-                "Unnamed road"
-              )}
-
-            </div>
-
-          `
-        ).join("")
-      : `
-
-          <div class="turn">
-            Route calculated successfully.
-          </div>
-
-        `;
-
-
-  speak(
-
-    "Route to " +
-    destination.display_name.split(",").slice(0,2).join(", ") +
-    " is " +
-    Math.round(
-      route.distance
-    ) +
-    " metres, approximately " +
-    minutes +
-    " minutes."
-
-  );
-
-
-  addHistory(
-    "ECHO",
-    "Created a live route to " +
-    destination.display_name
-  );
-
-}
-
-
-/* =========================================================
-   MEMORY
-========================================================= */
-
-function rememberScene() {
-
-  const image =
-    lastCapturedData ||
-    captureFrame();
-
-
-  if(!image) {
-
-    toast(
-      "Start the camera and capture something first."
-    );
-
-    return;
-
-  }
-
-
-  const labels =
-    uniqueLabels(
-      currentDetections
-    );
-
-
-  const memory = {
-
-    id:
-      Date.now(),
-
-    title:
-      labels.length
-        ? labels.slice(0,3).join(", ")
-        : "Visual scene",
-
-    icon:
-      iconForLabel(
-        labels[0]
-      ),
-
-    description:
-      labels.length
-        ? "Detected: " +
-          labels.join(", ")
-        : "Captured visual observation",
-
-    location:
-      currentLocation
-        ? currentLocation.lat.toFixed(5) +
-          ", " +
-          currentLocation.lon.toFixed(5)
-        : "Location not available",
-
-    time:
-      new Date().toLocaleString(),
-
-    image
-
-  };
-
-
-  memories.unshift(
-    memory
-  );
-
-
-  memories =
-    memories.slice(
-      0,
-      20
-    );
-
-
-  localStorage.setItem(
-    "echo_memories",
-    JSON.stringify(
-      memories
-    )
-  );
-
-
-  updateMemoryPreview();
-
-
-  toast(
-    "Real visual memory saved on this device."
-  );
-
-
-  speak(
-    "I've remembered this visual scene."
-  );
-
-
-  addHistory(
-    "ECHO",
-    "Remembered " +
-    memory.title
-  );
-
-}
-
-
-function iconForLabel(
-  label
-) {
-
-  const icons = {
-
-    bottle:
-      "🧴",
-
-    cup:
-      "☕",
-
-    laptop:
-      "💻",
-
-    cell phone:
-      "📱",
-
-    book:
-      "📖",
-
-    chair:
-      "🪑",
-
-    person:
-      "👤",
-
-    backpack:
-      "🎒",
-
-    handbag:
-      "👜",
-
-    suitcase:
-      "🧳",
-
-    bicycle:
-      "🚲",
-
-    car:
-      "🚗",
-
-    dog:
-      "🐕",
-
-    cat:
-      "🐈",
-
-    keyboard:
-      "⌨️",
-
-    mouse:
-      "🖱️",
-
-    remote:
-      "🎛️",
-
-    tv:
-      "📺"
-
-  };
-
-
-  return (
-    icons[label] ||
-    "👁️"
-  );
-
-}
-
-
-function updateMemoryPreview() {
-
-  $("memoryCount")
-    .textContent =
-    memories.length +
-    (
-      memories.length === 1
-        ? " saved"
-        : " saved"
-    );
-
-
-  if(!memories.length) {
-
-    $("memoryPreview")
-      .innerHTML = `
-
-        <div class="memory-empty">
-
-          ECHO hasn't remembered anything yet.
-
-          <br>
-
-          Capture something and say
-          <strong>“Remember this.”</strong>
-
-        </div>
-
-      `;
-
-    return;
-
-  }
-
-
-  const memory =
-    memories[0];
-
-
-  $("memoryPreview")
-    .innerHTML = `
-
-      <div class="memory-item">
-
-        <div class="memory-icon">
-          ${memory.icon}
-        </div>
-
-        <div class="memory-info">
-
-          <strong>
-            ${escapeHtml(
-              memory.title
-            )}
-          </strong>
-
-          <p>
-            ${escapeHtml(
-              memory.description
-            )}
-
-            ·
-
-            ${escapeHtml(
-              memory.time
-            )}
-          </p>
-
-        </div>
-
-        <div class="memory-badge">
-          LOCAL
-        </div>
-
-      </div>
-
-    `;
-
-}
-
-
-function renderMemoryList() {
-
-  if(!memories.length) {
-
-    $("memoryList")
-      .innerHTML = `
-
-        <div class="memory-empty">
-
-          No memories yet.
-
-          <br><br>
-
-          Start the camera,
-          capture a scene and press
-          <strong>REMEMBER</strong>.
-
-        </div>
-
-      `;
-
-    return;
-
-  }
-
-
-  $("memoryList")
-    .innerHTML =
-    memories
-      .map(
-        memory => `
-
-          <div class="memory-large">
-
-            <div class="memory-top">
-
-              <div class="memory-large-icon">
-                ${memory.icon}
-              </div>
-
-              <div class="memory-large-info">
-
-                <strong>
-                  ${escapeHtml(
-                    memory.title
-                  )}
-                </strong>
-
-                <p>
-                  ${escapeHtml(
-                    memory.description
-                  )}
-                </p>
-
-              </div>
-
-
-              <button
-                class="delete-memory"
-                onclick="deleteMemory(${memory.id})">
-
-                ×
-
-              </button>
-
-            </div>
-
-
-            <div class="memory-meta">
-
-              Seen:
-              ${escapeHtml(
-                memory.time
-              )}
-
-              <br>
-
-              Location:
-              ${escapeHtml(
-                memory.location
-              )}
-
-            </div>
-
-          </div>
-
-        `
-      )
-      .join("");
-
-}
-
-
-function deleteMemory(
-  id
-) {
-
-  memories =
-    memories.filter(
-      memory =>
-        memory.id !== id
-    );
-
-
-  localStorage.setItem(
-    "echo_memories",
-    JSON.stringify(
-      memories
-    )
-  );
-
-
-  updateMemoryPreview();
-
-  renderMemoryList();
-
-  toast(
-    "Memory deleted."
-  );
-
-}
-
-
-/* =========================================================
-   VOICE RECOGNITION
-========================================================= */
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-
-if(SpeechRecognition) {
-
-  recognition =
-    new SpeechRecognition();
-
-
-  recognition.lang =
-    "en-IN";
-
-
-  recognition.continuous =
-    false;
-
-
-  recognition.interimResults =
-    false;
-
-
-  recognition.maxAlternatives =
-    1;
-
-
-  recognition.onstart =
-    () => {
-
-      listening =
-        true;
-
-
-      $("voiceButton")
-        .classList
-        .add("listening");
-
-
-      $("voiceStatus")
-        .textContent =
-        "Listening… speak now";
-
-
-      $("voiceTranscript")
-        .textContent =
-        "I'm listening…";
-
-
-      setStatus(
-        "LISTENING",
-        "busy"
-      );
-
-    };
-
-
-  recognition.onresult =
-    event => {
-
-      const text =
-        event
-          .results[0][0]
-          .transcript
-          .trim();
-
-
-      $("voiceTranscript")
-        .textContent =
-        "“" +
-        text +
-        "”";
-
-
-      $("voiceStatus")
-        .textContent =
-        "ECHO heard you";
-
-
-      addHistory(
-        "YOU",
-        text
-      );
-
-
-      handleCommand(
-        text
-      );
-
-    };
-
-
-  recognition.onerror =
-    event => {
-
-      console.error(
-        "Speech error:",
-        event.error
-      );
-
-
-      if(
-        event.error ===
-        "not-allowed"
-      ) {
-
-        toast(
-          "Microphone permission was blocked."
-        );
-
-      }
-
-      else if(
-        event.error ===
-        "no-speech"
-      ) {
-
-        toast(
-          "I didn't hear anything."
-        );
-
-      }
-
-      else {
-
-        toast(
-          "Voice recognition failed."
-        );
-
-      }
-
-    };
-
-
-  recognition.onend =
-    () => {
-
-      listening =
-        false;
-
-
-      $("voiceButton")
-        .classList
-        .remove(
-          "listening"
-        );
-
-
-      $("voiceStatus")
-        .textContent =
-        "ECHO is ready to listen";
-
-
-      setStatus(
-        "READY"
-      );
-
-    };
-
-}
-
-
-function toggleVoice() {
-
-  if(!recognition) {
-
-    toast(
-      "Voice recognition isn't supported here. Try Chrome."
-    );
-
-    return;
-
-  }
-
-
-  if(listening) {
-
-    recognition.stop();
-
-    return;
-
-  }
-
-
-  try {
-
-    recognition.start();
-
-  }
-
-  catch(error) {
-
-    console.error(
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   VOICE COMMAND ENGINE
-========================================================= */
-
-async function handleCommand(
-  command
-) {
-
-  const text =
-    command.toLowerCase();
-
-
-  /* -----------------------------------------
-     WHAT IS THIS
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "what is this"
-    ) ||
-
-    text.includes(
-      "what is that"
-    ) ||
-
-    text.includes(
-      "what am i looking at"
-    ) ||
-
-    text.includes(
-      "what is in front of me"
-    ) ||
-
-    text.includes(
-      "look around"
-    )
-
-  ) {
-
-    await analyzeScene();
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     READ
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "read this"
-    ) ||
-
-    text.includes(
-      "read that"
-    ) ||
-
-    text ===
-      "read it"
-
-  ) {
-
-    await readCamera();
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     TRANSLATION
-  ----------------------------------------- */
-
-  if(
-    text.includes(
-      "translate"
-    )
-  ) {
-
-    if(!lastOCRText) {
-
-      await readCamera();
-
-    }
-
-
-    if(lastOCRText) {
-
-      await translateOCR();
-
-    }
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     WHERE AM I
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "where am i"
-    ) ||
-
-    text.includes(
-      "my location"
-    ) ||
-
-    text.includes(
-      "what is my location"
-    )
-
-  ) {
-
-    openSheet(
-      "locationSheet"
-    );
-
-
-    locateMe();
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     GUIDE
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "guide me to"
-    ) ||
-
-    text.includes(
-      "take me to"
-    ) ||
-
-    text.includes(
-      "navigate to"
-    )
-
-  ) {
-
-    const destination =
-      extractDestination(
-        command
-      );
-
-
-    openSheet(
-      "guideSheet"
-    );
-
-
-    if(destination) {
-
-      $("destinationInput")
-        .value =
-        destination;
-
-
-      await buildRoute();
-
-    }
-
-    else {
-
-      respond(
-        "Tell me the destination you want to reach."
-      );
-
-    }
-
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     REMEMBER
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "remember this"
-    ) ||
-
-    text.includes(
-      "remember that"
-    )
-
-  ) {
-
-    if(!cameraStream) {
-
-      await toggleCamera();
-
-    }
-
-
-    if(cameraStream) {
-
-      captureFrame();
-
-      rememberScene();
-
-    }
-
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     FIND
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "find my"
-    )
-
-  ) {
-
-    const target =
-      command
-        .replace(
-          /find my/i,
-          ""
-        )
-        .trim();
-
-
-    await findObject(
-      target
-    );
-
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     OPEN CAMERA
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "open camera"
-    ) ||
-
-    text.includes(
-      "start camera"
-    )
-
-  ) {
-
-    await toggleCamera();
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     IDENTIFY PLACE
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "what building"
-    ) ||
-
-    text.includes(
-      "what place is this"
-    ) ||
-
-    text.includes(
-      "identify this place"
-    )
-
-  ) {
-
-    await identifyPlace();
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     HELP
-  ----------------------------------------- */
-
-  if(
-
-    text.includes(
-      "what can you do"
-    ) ||
-
-    text ===
-      "help"
-
-  ) {
-
-    respond(
-
-      "I can understand objects from the camera, read text, translate it, remember visual observations, find remembered objects, tell you your location and create routes."
-
-    );
-
-    return;
-
-  }
-
-
-  /* -----------------------------------------
-     FALLBACK
-  ----------------------------------------- */
-
-  respond(
-
-    "I heard you say " +
-    command +
-    ". Try asking me what you see, asking me to read something, asking where you are, or telling me to guide you somewhere."
-
-  );
-
-}
-
-
-/* =========================================================
-   FIND OBJECT
-========================================================= */
-
-async function findObject(
-  target
-) {
-
-  if(!target) {
-
-    respond(
-      "Tell me what you want me to find."
-    );
-
-    return;
-
-  }
-
-
-  const normalized =
-    target.toLowerCase();
-
-
-  const memory =
-    memories.find(
-      item =>
-        item.title
-          .toLowerCase()
-          .includes(
-            normalized
-          ) ||
-
-        item.description
-          .toLowerCase()
-          .includes(
-            normalized
-          )
-    );
-
-
-  if(memory) {
-
-    respond(
-
-      "I remember " +
-      target +
-      ". It was last recorded at " +
-      memory.location +
-      ". I'll check the live camera now."
-
-    );
-
-
-    if(!cameraStream) {
-
-      await toggleCamera();
-
-    }
-
-
-    if(cameraStream) {
-
-      const model =
-        await loadDetector();
-
-
-      if(model) {
-
-        const predictions =
-          await model.detect(
-            $("video"),
-            20
-          );
-
-
-        const matches =
-          predictions.filter(
-            item =>
-              item.score >= .45 &&
-              item.class
-                .toLowerCase()
-                .includes(
-                  normalized
-                )
-          );
-
-
-        if(matches.length) {
-
-          respond(
-
-            "I can see a " +
-            target +
-            " in the current camera view."
-
-          );
-
-        }
-
-        else {
-
-          respond(
-
-            "I remember where it was, but I can't confidently see it in the current camera view yet."
-
-          );
-
-        }
-
-      }
-
-    }
-
-
-    return;
-
-  }
-
-
-  const known =
-    memories
-      .map(
-        memory =>
-          memory.title
-      )
-      .join(", ");
-
-
-  respond(
-
-    "I don't have a saved visual memory for " +
-    target +
-    "." +
-    (
-      known
-        ? " Your saved memories include " +
-          known +
-          "."
-        : ""
-    )
-
-  );
-
-}
-
-
-/* =========================================================
-   RESPONSE
-========================================================= */
-
-function respond(
-  text
-) {
-
-  showVoiceResponse(
-    text
-  );
-
-  speak(
-    text
-  );
-
-}
-
-
-function showVoiceResponse(
-  text
-) {
-
-  $("voiceResponseText")
-    .textContent =
-    text;
-
-
-  $("voiceResponse")
-    .classList
-    .add("show");
-
-
-  addHistory(
-    "ECHO",
-    text
-  );
-
-}
-
-
-function repeatResponse() {
-
-  speak(
-    $("voiceResponseText")
-      .textContent
-  );
-
-}
-
-
-function speakVisionResult() {
-
-  if(lastVisionText) {
-
-    speak(
-      lastVisionText
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   SPEECH OUTPUT
-========================================================= */
-
-function speak(
-  text
-) {
-
-  if(
-    !("speechSynthesis" in window)
-  ) {
-
-    return;
-
-  }
-
-
-  speechSynthesis.cancel();
-
-
-  const utterance =
-    new SpeechSynthesisUtterance(
-      text
-    );
-
-
-  utterance.lang =
-    "en-IN";
-
-
-  utterance.rate =
-    .9;
-
-
-  utterance.pitch =
-    1;
-
-
-  speechSynthesis.speak(
-    utterance
-  );
-
-}
-
-
-/* =========================================================
-   HISTORY
-========================================================= */
-
-function addHistory(
-  role,
-  text
-) {
-
-  history.unshift({
-
-    role,
-
-    text,
-
-    time:
-      new Date()
-        .toLocaleTimeString(
-          [],
-          {
-            hour:
-              "numeric",
-
-            minute:
-              "2-digit"
-          }
-        )
-
+function logHistory(action, result) {
+  state.history.unshift({
+    action,
+    result,
+    time: new Date().toLocaleString()
   });
-
-
-  history =
-    history.slice(
-      0,
-      50
-    );
-
-
-  localStorage.setItem(
-    "echo_history",
-    JSON.stringify(
-      history
-    )
-  );
-
+  state.history = state.history.slice(0, 50);
+  localStorage.setItem("echo_history", JSON.stringify(state.history));
 }
 
+function speak(text) {
+  $("response").textContent = text;
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.95;
+  u.pitch = 1;
+  u.volume = 1;
+  window.speechSynthesis.speak(u);
+}
 
-function renderHistory() {
+function needCamera() {
+  if (!state.stream || !$("video").srcObject) {
+    toast("Start the camera first.");
+    speak("Please start the camera first.");
+    return false;
+  }
+  return true;
+}
 
-  if(!history.length) {
-
-    $("historyList")
-      .innerHTML = `
-
-        <div class="memory-empty">
-
-          Your real ECHO interactions
-          will appear here.
-
-        </div>
-
-      `;
-
-    return;
-
+async function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast("Camera API is not available in this browser.", "error");
+    $("cameraNote").textContent = "Camera API unavailable.";
+    return false;
   }
 
+  if (state.stream) {
+    $("video").style.display = "block";
+    $("placeholder").style.display = "none";
+    return true;
+  }
 
-  $("historyList")
-    .innerHTML =
-    history
-      .map(
-        item => `
+  try {
+    setStatus("CAMERA…");
+    $("cameraNote").textContent = "Requesting camera permission…";
 
-          <div class="history-item">
-
-            <div class="history-role">
-
-              ${escapeHtml(
-                item.role
-              )}
-
-            </div>
-
-            <div class="history-text">
-
-              ${escapeHtml(
-                item.text
-              )}
-
-            </div>
-
-            <div class="history-time">
-
-              ${escapeHtml(
-                item.time
-              )}
-
-            </div>
-
-          </div>
-
-        `
-      )
-      .join("");
-
-}
-
-
-/* =========================================================
-   SHEET OPENERS
-========================================================= */
-
-function openVisionSheet() {
-
-  openSheet(
-    "visionSheet"
-  );
-
-}
-
-
-function activateVision() {
-
-  closeSheet(
-    "visionSheet"
-  );
-
-
-  document
-    .querySelector(
-      ".camera-card"
-    )
-    .scrollIntoView({
-      behavior:
-        "smooth"
+    state.stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
     });
 
+    const video = $("video");
+    video.srcObject = state.stream;
+    await video.play();
 
-  setTimeout(
-    async () => {
-
-      if(!cameraStream) {
-
-        await toggleCamera();
-
-      }
-
-
-      if(cameraStream) {
-
-        await startLiveDetection();
-
-      }
-
-    },
-    400
-  );
-
+    $("placeholder").style.display = "none";
+    video.style.display = "block";
+    $("cameraNote").textContent = "Camera live. Point the phone at a real scene.";
+    setStatus("CAMERA LIVE", "success");
+    toast("Camera is live.", "success");
+    return true;
+  } catch (err) {
+    console.error(err);
+    setStatus("CAMERA BLOCKED", "error");
+    $("cameraNote").textContent = "Camera could not start: " + (err.message || "permission denied");
+    toast("Allow camera access in Chrome and try again.", "error");
+    return false;
+  }
 }
 
-
-function openMemorySheet() {
-
-  renderMemoryList();
-
-  openSheet(
-    "memorySheet"
-  );
-
+function stopCamera() {
+  stopDetection();
+  if (state.stream) {
+    state.stream.getTracks().forEach(track => track.stop());
+    state.stream = null;
+  }
+  $("video").srcObject = null;
+  $("video").style.display = "none";
+  $("overlay").style.display = "none";
+  $("placeholder").style.display = "block";
+  $("liveTag").style.display = "none";
+  $("cameraNote").textContent = "Camera is off.";
+  setStatus("READY");
 }
 
+async function captureFrame(maxWidth=900, quality=.82) {
+  if (!needCamera()) return null;
+  const video = $("video");
+  if (video.readyState < 2) {
+    toast("Camera is not ready yet.");
+    return null;
+  }
 
-function openReadSheet() {
-
-  openSheet(
-    "readSheet"
-  );
-
+  const scale = Math.min(1, maxWidth / video.videoWidth);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(video.videoWidth * scale);
+  canvas.height = Math.round(video.videoHeight * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/jpeg", quality);
 }
 
-
-function openLocationSheet() {
-
-  openSheet(
-    "locationSheet"
-  );
-
+function clearOverlay() {
+  const c = $("overlay");
+  const ctx = c.getContext("2d");
+  ctx.clearRect(0, 0, c.width, c.height);
 }
 
+function drawDetections(predictions) {
+  const video = $("video");
+  const canvas = $("overlay");
+  if (!video.videoWidth || !video.videoHeight) return;
 
-function openGuideSheet() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.style.display = "block";
 
-  openSheet(
-    "guideSheet"
-  );
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.lineWidth = Math.max(2, canvas.width / 500);
+  ctx.font = Math.max(13, canvas.width / 65) + "px Arial";
 
-}
+  predictions.forEach(p => {
+    const [x,y,w,h] = p.bbox;
+    ctx.strokeStyle = "#a8ff4d";
+    ctx.strokeRect(x,y,w,h);
 
-
-function openHistorySheet() {
-
-  renderHistory();
-
-  openSheet(
-    "historySheet"
-  );
-
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function setActiveNav(
-  button
-) {
-
-  document
-    .querySelectorAll(
-      ".nav"
-    )
-    .forEach(
-      item =>
-        item.classList
-          .remove(
-            "active"
-          )
-    );
-
-
-  button.classList.add(
-    "active"
-  );
-
-}
-
-
-function goHome(
-  button
-) {
-
-  setActiveNav(
-    button
-  );
-
-
-  window.scrollTo({
-
-    top:
-      0,
-
-    behavior:
-      "smooth"
-
+    const label = p.class + " " + Math.round(p.score * 100) + "%";
+    const pad = 5;
+    const tw = ctx.measureText(label).width + pad * 2;
+    const th = 24;
+    ctx.fillStyle = "#a8ff4d";
+    ctx.fillRect(x, Math.max(0,y-th), tw, th);
+    ctx.fillStyle = "#071006";
+    ctx.fillText(label, x+pad, Math.max(16,y-7));
   });
-
 }
 
+function describeObjects(predictions) {
+  if (!predictions.length) return "I do not see a supported object clearly enough yet.";
+  const names = predictions.map(p => p.class);
+  const unique = [...new Set(names)];
 
-/* =========================================================
-   UTILITIES
-========================================================= */
-
-function sleep(
-  ms
-) {
-
-  return new Promise(
-    resolve =>
-      setTimeout(
-        resolve,
-        ms
-      )
-  );
-
+  if (unique.length === 1) {
+    return "I can see a " + unique[0] + ".";
+  }
+  if (unique.length === 2) {
+    return "I can see a " + unique[0] + " and a " + unique[1] + ".";
+  }
+  return "I can see " + unique.slice(0,4).join(", ") + ".";
 }
 
-
-function extractDestination(
-  command
-) {
-
-  const patterns = [
-
-    /guide me to (.+)/i,
-
-    /take me to (.+)/i,
-
-    /navigate to (.+)/i
-
-  ];
-
-
-  for(
-    const pattern of patterns
-  ) {
-
-    const match =
-      command.match(
-        pattern
-      );
-
-
-    if(match) {
-
-      return match[1]
-        .trim()
-        .replace(
-          /please$/i,
-          ""
-        )
-        .trim();
-
-    }
-
+async function loadDetector() {
+  if (state.detector) return state.detector;
+  if (typeof cocoSsd === "undefined") {
+    throw new Error("Object detection library did not load.");
   }
 
+  setStatus("LOADING AI…");
+  $("engineStatus").textContent = "LOADING OBJECT AI…";
+  toast("Loading object detection model. First load can take a while.");
 
-  return "";
-
+  state.detector = await cocoSsd.load({ base: "lite_mobilenet_v2" });
+  $("engineStatus").textContent = "OBJECT AI READY";
+  setStatus("AI READY", "success");
+  return state.detector;
 }
 
+async function detectOnce() {
+  if (!needCamera()) return [];
+  try {
+    const detector = await loadDetector();
+    const predictions = await detector.detect($("video"), 6, 0.45);
+    state.lastObjects = predictions;
+    drawDetections(predictions);
+    return predictions;
+  } catch (err) {
+    console.error(err);
+    toast("Object AI failed to load. Camera still works.", "error");
+    return [];
+  }
+}
 
-function escapeHtml(
-  value
-) {
+async function analyzeScene() {
+  if (!needCamera()) return;
+  setStatus("ANALYZING…");
+  const predictions = await detectOnce();
+  const description = describeObjects(predictions);
+  logHistory("SEE", description);
+  $("cameraNote").textContent = description;
+  speak(description);
+  setStatus("CAMERA LIVE", "success");
+}
 
-  return String(
-    value
-  )
+async function startDetection() {
+  if (!needCamera()) return;
+  if (state.detecting) return;
 
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
+  state.detecting = true;
+  $("detectBtn").classList.add("active");
+  $("detectBtn").textContent = "STOP OBJECTS";
+  $("liveTag").style.display = "block";
+  toast("Live object detection started.");
 
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
+  await loadDetector();
 
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
+  const loop = async () => {
+    if (!state.detecting) return;
+    await detectOnce();
+    state.detectionTimer = setTimeout(loop, 700);
+  };
+  loop();
+}
 
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
+function stopDetection() {
+  state.detecting = false;
+  clearTimeout(state.detectionTimer);
+  $("detectBtn").classList.remove("active");
+  $("detectBtn").textContent = "LIVE OBJECTS";
+  $("liveTag").style.display = "none";
+  clearOverlay();
+}
 
-    .replaceAll(
-      "'",
-      "&#039;"
+async function readCamera() {
+  if (!needCamera()) return;
+  if (state.ocrBusy) return;
+
+  state.ocrBusy = true;
+  setStatus("READING…");
+  $("cameraNote").textContent = "Reading actual text from the camera…";
+
+  try {
+    if (typeof Tesseract === "undefined") throw new Error("OCR library did not load.");
+
+    const image = await captureFrame(1200, .9);
+    if (!image) throw new Error("Could not capture camera frame.");
+
+    const result = await Tesseract.recognize(image, "eng", {
+      logger: m => {
+        if (m && m.status === "recognizing text" && typeof m.progress === "number") {
+          $("cameraNote").textContent = "Reading text… " + Math.round(m.progress*100) + "%";
+        }
+      }
+    });
+
+    const text = result.data.text.replace(/\s+/g," ").trim();
+    state.lastText = text;
+
+    if (!text) {
+      speak("I could not find readable text. Move the camera closer and try again.");
+      $("cameraNote").textContent = "No readable text found.";
+    } else {
+      const short = text.length > 500 ? text.slice(0,500) + "…" : text;
+      $("cameraNote").textContent = "TEXT: " + short;
+      logHistory("READ", text);
+      speak("I read: " + short);
+    }
+    setStatus("CAMERA LIVE", "success");
+  } catch (err) {
+    console.error(err);
+    toast("OCR failed. Make sure the text is clear and well lit.", "error");
+    $("cameraNote").textContent = "OCR error: " + (err.message || err);
+    setStatus("CAMERA LIVE");
+  } finally {
+    state.ocrBusy = false;
+  }
+}
+
+async function translateText() {
+  let text = state.lastText;
+  if (!text) {
+    await readCamera();
+    text = state.lastText;
+  }
+  if (!text) return;
+
+  try {
+    setStatus("TRANSLATING…");
+    const url = "https://api.mymemory.translated.net/get?q=" +
+      encodeURIComponent(text.slice(0,450)) + "&langpair=en|ta";
+
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Translation service unavailable.");
+    const data = await response.json();
+    const translated = data?.responseData?.translatedText;
+
+    if (!translated) throw new Error("No translation returned.");
+
+    $("cameraNote").textContent = "TAMIL: " + translated;
+    logHistory("TRANSLATE", translated);
+    speak("Tamil translation: " + translated);
+    setStatus("CAMERA LIVE", "success");
+  } catch (err) {
+    console.error(err);
+    toast("Translation service is unavailable right now.", "error");
+    speak("I could read the text, but translation is unavailable right now.");
+    setStatus("CAMERA LIVE");
+  }
+}
+
+function getLocation() {
+  return new Promise((resolve,reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported."));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      p => resolve(p.coords),
+      e => reject(new Error(e.message || "Location permission denied.")),
+      { enableHighAccuracy:true, timeout:15000, maximumAge:30000 }
+    );
+  });
+}
+
+async function locateMe() {
+  try {
+    setStatus("LOCATING…");
+    $("cameraNote").textContent = "Getting your real GPS position…";
+    const coords = await getLocation();
+    state.lastLocation = {lat:coords.latitude, lon:coords.longitude};
+
+    let place = "";
+    try {
+      const r = await fetch(
+        "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
+        coords.latitude + "&lon=" + coords.longitude
+      );
+      if (r.ok) {
+        const d = await r.json();
+        place = d.display_name || "";
+      }
+    } catch (_) {}
+
+    const result = place
+      ? "You are at " + place + "."
+      : "Your GPS position is latitude " + coords.latitude.toFixed(5) +
+        ", longitude " + coords.longitude.toFixed(5) + ".";
+
+    $("cameraNote").textContent = result;
+    logHistory("LOCATION", result);
+    speak(result);
+    setStatus("GPS READY", "success");
+  } catch (err) {
+    console.error(err);
+    $("cameraNote").textContent = "Location unavailable: " + err.message;
+    toast("Allow location access in Chrome.", "error");
+    speak("I could not access your location. Please allow location access.");
+    setStatus("READY");
+  }
+}
+
+async function identifyPlace() {
+  let text = state.lastText;
+  if (!text && needCamera()) {
+    await readCamera();
+    text = state.lastText;
+  }
+
+  try {
+    const coords = state.lastLocation || await getLocation();
+    state.lastLocation = {lat:coords.latitude, lon:coords.longitude};
+
+    const params = new URLSearchParams({
+      format:"jsonv2",
+      lat:coords.latitude,
+      lon:coords.longitude
+    });
+    const r = await fetch("https://nominatim.openstreetmap.org/reverse?" + params);
+    const d = await r.json();
+    const address = d.display_name || "an unidentified location";
+
+    const result = text
+      ? "The camera reads “" + text.slice(0,120) + "”. Your nearby location is " + address + "."
+      : "Your nearby location is " + address + ".";
+
+    $("cameraNote").textContent = result;
+    logHistory("PLACE", result);
+    speak(result);
+    setStatus("GPS READY","success");
+  } catch (err) {
+    toast("I could not identify the place from GPS.", "error");
+    speak("I could not identify this place right now.");
+  }
+}
+
+async function routeTo(destination) {
+  if (!destination) {
+    destination = prompt("Where should ECHO guide you?");
+  }
+  if (!destination) return;
+
+  try {
+    setStatus("ROUTING…");
+    const coords = state.lastLocation || await getLocation();
+    state.lastLocation = {lat:coords.latitude, lon:coords.longitude};
+
+    const searchUrl =
+      "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=" +
+      encodeURIComponent(destination);
+
+    const sr = await fetch(searchUrl);
+    const places = await sr.json();
+    if (!places.length) throw new Error("Destination not found.");
+
+    const destLat = Number(places[0].lat);
+    const destLon = Number(places[0].lon);
+
+    const routeUrl =
+      "https://router.project-osrm.org/route/v1/foot/" +
+      coords.longitude + "," + coords.latitude + ";" +
+      destLon + "," + destLat +
+      "?overview=false&steps=true";
+
+    let rr = await fetch(routeUrl);
+    if (!rr.ok) {
+      rr = await fetch(
+        "https://router.project-osrm.org/route/v1/driving/" +
+        coords.longitude + "," + coords.latitude + ";" +
+        destLon + "," + destLat +
+        "?overview=false&steps=true"
+      );
+    }
+
+    if (!rr.ok) throw new Error("Routing service unavailable.");
+    const rd = await rr.json();
+    if (!rd.routes?.length) throw new Error("No route found.");
+
+    const route = rd.routes[0];
+    const km = route.distance / 1000;
+    const min = Math.round(route.duration / 60);
+
+    let instruction = "";
+    const firstStep = route.legs?.[0]?.steps?.[0]?.maneuver;
+    if (firstStep?.instruction) instruction = firstStep.instruction;
+
+    const result =
+      "Route to " + destination + ". About " +
+      (km < 1 ? Math.round(km*1000) + " metres" : km.toFixed(1) + " kilometres") +
+      ", approximately " + min + " minutes." +
+      (instruction ? " First instruction: " + instruction : "");
+
+    $("cameraNote").textContent = result;
+    logHistory("ROUTE", result);
+    speak(result);
+    setStatus("ROUTE READY","success");
+  } catch (err) {
+    console.error(err);
+    toast("I could not create that route: " + err.message, "error");
+    speak("I could not create that route right now.");
+    setStatus("READY");
+  }
+}
+
+async function rememberScene() {
+  if (!needCamera()) return;
+
+  try {
+    const image = await captureFrame(700, .72);
+    if (!image) return;
+
+    const objects = state.lastObjects.map(x => x.class);
+    const title = prompt(
+      "What should I remember this as?",
+      objects.length ? objects[0] : "My saved scene"
     );
 
+    if (!title) return;
+
+    const memory = {
+      id: Date.now(),
+      title:title.trim(),
+      image,
+      objects:[...new Set(objects)],
+      text:state.lastText || "",
+      time:new Date().toLocaleString()
+    };
+
+    state.memories.unshift(memory);
+    state.memories = state.memories.slice(0,20);
+    localStorage.setItem("echo_memories", JSON.stringify(state.memories));
+
+    logHistory("REMEMBER", title);
+    $("cameraNote").textContent = "Remembered: " + title;
+    speak("I remembered " + title + ".");
+    toast("Saved to ECHO memory.", "success");
+  } catch (err) {
+    console.error(err);
+    toast("Could not save this memory.", "error");
+  }
 }
 
+async function findMemory(query) {
+  query = (query || prompt("What do you want ECHO to find?") || "").trim().toLowerCase();
+  if (!query) return;
 
-/* =========================================================
-   INITIALIZATION
-========================================================= */
+  const matches = state.memories.filter(m =>
+    m.title.toLowerCase().includes(query) ||
+    m.objects.some(o => o.toLowerCase().includes(query)) ||
+    m.text.toLowerCase().includes(query)
+  );
 
-updateMemoryPreview();
-
-
-/* =========================================================
-   KEYBOARD VOICE SHORTCUT
-========================================================= */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if(
-
-      event.code ===
-      "Space" &&
-
-      event.target.tagName !==
-      "INPUT" &&
-
-      event.target.tagName !==
-      "TEXTAREA"
-
-    ) {
-
-      event.preventDefault();
-
-      toggleVoice();
-
-    }
-
+  if (!matches.length) {
+    speak("I do not have a saved memory matching " + query + ".");
+    toast("No matching memory found.");
+    return;
   }
-);
 
+  const latest = matches[0];
+  const result = "I remember " + latest.title + ", saved " + latest.time + ".";
+  $("cameraNote").textContent = result;
+  logHistory("FIND MEMORY", query);
+  speak(result);
+  openSheet("MEMORY SEARCH", matches);
+}
 
-/* =========================================================
-   CLEANUP
-========================================================= */
+function showMemories() {
+  openSheet("MEMORY", state.memories);
+}
 
-window.addEventListener(
-  "beforeunload",
-  () => {
+function showHistory() {
+  openSheet("HISTORY", state.history);
+}
 
-    if(cameraStream) {
+function openSheet(title, data) {
+  $("sheetTitle").textContent = title;
+  const box = $("sheetContent");
+  box.innerHTML = "";
 
-      cameraStream
-        .getTracks()
-        .forEach(
-          track =>
-            track.stop()
-        );
+  if (!data.length) {
+    box.innerHTML = '<p style="color:#74807d;font-size:11px">Nothing here yet. Use ECHO first — memories and history are created from your real actions.</p>';
+  } else {
+    data.forEach(item => {
+      const div = document.createElement("div");
+      div.className = "memory";
 
-    }
+      if (item.image) {
+        const img = document.createElement("img");
+        img.src = item.image;
+        div.appendChild(img);
+      }
 
-    if(tesseractWorker) {
-
-      tesseractWorker
-        .terminate();
-
-    }
-
+      const text = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = item.title || item.action || "Memory";
+      const small = document.createElement("small");
+      small.textContent = item.time + (item.result ? " — " + item.result : "");
+      text.appendChild(b);
+      text.appendChild(small);
+      div.appendChild(text);
+      box.appendChild(div);
+    });
   }
-);
 
+  $("sheet").classList.add("open");
+}
+
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    $("voiceLabel").textContent = "VOICE RECOGNITION NOT SUPPORTED — USE CHROME";
+    $("micBtn").disabled = true;
+    return;
+  }
+
+  state.recognition = new SR();
+  state.recognition.lang = "en-IN";
+  state.recognition.interimResults = false;
+  state.recognition.continuous = false;
+
+  state.recognition.onstart = () => {
+    state.listening = true;
+    $("micBtn").classList.add("listening");
+    $("voiceLabel").textContent = "LISTENING…";
+    $("transcript").textContent = "Speak now…";
+  };
+
+  state.recognition.onresult = async event => {
+    const text = event.results[0][0].transcript.trim();
+    $("transcript").textContent = "“" + text + "”";
+    await handleCommand(text);
+  };
+
+  state.recognition.onerror = event => {
+    console.error("speech error", event.error);
+    const messages = {
+      "not-allowed":"Microphone permission was blocked.",
+      "no-speech":"I did not hear anything.",
+      "network":"Speech recognition needs a network connection in this browser."
+    };
+    const msg = messages[event.error] || "Voice recognition failed.";
+    $("voiceLabel").textContent = msg.toUpperCase();
+    toast(msg, "error");
+  };
+
+  state.recognition.onend = () => {
+    state.listening = false;
+    $("micBtn").classList.remove("listening");
+    if ($("voiceLabel").textContent === "LISTENING…") {
+      $("voiceLabel").textContent = "ECHO IS READY TO LISTEN";
+    }
+  };
+}
+
+async function startListening() {
+  if (!state.recognition) {
+    toast("Voice recognition is not supported here.", "error");
+    return;
+  }
+  try {
+    if (state.listening) {
+      state.recognition.stop();
+      return;
+    }
+    state.recognition.start();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function handleCommand(raw) {
+  const command = raw.toLowerCase();
+
+  if (command.includes("what is this") ||
+      command.includes("what's this") ||
+      command.includes("what is in front") ||
+      command.includes("what can you see") ||
+      command.includes("see this")) {
+    if (!state.stream) await startCamera();
+    await analyzeScene();
+    return;
+  }
+
+  if (command.includes("read") || command.includes("text")) {
+    if (!state.stream) await startCamera();
+    await readCamera();
+    return;
+  }
+
+  if (command.includes("translate")) {
+    if (!state.stream) await startCamera();
+    await translateText();
+    return;
+  }
+
+  if (command.includes("where am i") ||
+      command.includes("my location") ||
+      command.includes("where are we")) {
+    await locateMe();
+    return;
+  }
+
+  if (command.includes("what place") ||
+      command.includes("identify this place")) {
+    await identifyPlace();
+    return;
+  }
+
+  if (command.includes("remember")) {
+    if (!state.stream) await startCamera();
+    await rememberScene();
+    return;
+  }
+
+  if (command.includes("find my") || command.includes("find ")) {
+    const q = raw
+      .replace(/find my/i,"")
+      .replace(/find/i,"")
+      .trim();
+    await findMemory(q);
+    return;
+  }
+
+  if (command.includes("guide me to") ||
+      command.includes("take me to") ||
+      command.includes("navigate to")) {
+    const q = raw.replace(/guide me to/i,"")
+      .replace(/take me to/i,"")
+      .replace(/navigate to/i,"")
+      .trim();
+    await routeTo(q);
+    return;
+  }
+
+  if (command.includes("start camera") || command.includes("open camera")) {
+    await startCamera();
+    return;
+  }
+
+  if (command.includes("stop camera")) {
+    stopCamera();
+    speak("Camera stopped.");
+    return;
+  }
+
+  if (command.includes("help") || command.includes("what can you do")) {
+    speak("I can see objects, read text, translate text, remember scenes, find saved memories, locate you, identify nearby places and create routes.");
+    return;
+  }
+
+  speak("I heard " + raw + ". Try asking what is in front of you, read this, where am I, remember this, or guide me to a destination.");
+}
+
+$("startBtn").addEventListener("click", async () => {
+  if (state.stream) {
+    stopCamera();
+  } else {
+    await startCamera();
+  }
+});
+
+$("seeBtn").addEventListener("click", async () => {
+  if (!state.stream) {
+    const ok = await startCamera();
+    if (!ok) return;
+  }
+  await analyzeScene();
+});
+
+$("readBtn").addEventListener("click", readCamera);
+$("captureBtn").addEventListener("click", async () => {
+  const image = await captureFrame();
+  if (!image) return;
+
+  const a = document.createElement("a");
+  a.href = image;
+  a.download = "echo-capture-" + Date.now() + ".jpg";
+  a.click();
+  toast("Real camera frame captured.", "success");
+  speak("I captured the current scene.");
+});
+
+$("detectBtn").addEventListener("click", async () => {
+  if (state.detecting) {
+    stopDetection();
+  } else {
+    await startDetection();
+  }
+});
+
+$("locationBtn").addEventListener("click", locateMe);
+$("placeBtn").addEventListener("click", identifyPlace);
+$("routeBtn").addEventListener("click", () => routeTo(""));
+
+$("micBtn").addEventListener("click", startListening);
+$("memoryBtn").addEventListener("click", showMemories);
+$("historyBtn").addEventListener("click", showHistory);
+$("homeBtn").addEventListener("click", () => window.scrollTo({top:0,behavior:"smooth"}));
+$("closeSheet").addEventListener("click", () => $("sheet").classList.remove("open"));
+$("sheet").addEventListener("click", e => {
+  if (e.target === $("sheet")) $("sheet").classList.remove("open");
+});
+
+window.addEventListener("beforeunload", stopCamera);
+
+initSpeech();
+
+if (!navigator.mediaDevices?.getUserMedia) {
+  $("cameraNote").textContent = "Camera API unavailable in this browser.";
+}
+
+console.log("ECHO initialized successfully.");
 </script>
-
 </body>
-
 </html>
