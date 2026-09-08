@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 
 <meta
@@ -8,16 +10,49 @@
   content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 >
 
-<meta name="theme-color" content="#07090c">
+<meta
+  name="theme-color"
+  content="#05070a"
+>
 
-<title>ECHO — Context-Aware AI Companion</title>
+<meta
+  name="description"
+  content="ECHO — a voice-first AI companion for independent living."
+>
+
+<title>ECHO — AI Companion</title>
+
+
+<!-- =========================================================
+     EXTERNAL LIBRARIES
+
+     TensorFlow.js
+     COCO-SSD
+     Tesseract.js
+     Leaflet
+========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
 
 <style>
 
 /* =========================================================
-   ECHO
-   Premium accessibility-first AI companion prototype
-   ========================================================= */
+   ECHO DESIGN SYSTEM
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -27,55 +62,101 @@
 
 :root {
 
-  --bg: #06080b;
-  --surface: #0c1015;
-  --surface-2: #11161d;
-  --surface-3: #171d25;
+  --bg:
+    #05070a;
 
-  --text: #f5f7fa;
-  --muted: #8d98a6;
-  --muted-2: #66717e;
+  --surface:
+    #0b0f14;
 
-  --line: rgba(255,255,255,.085);
-  --line-strong: rgba(255,255,255,.14);
+  --surface-2:
+    #11161d;
 
-  --accent: #a5ff62;
-  --accent-soft: rgba(165,255,98,.09);
-  --accent-border: rgba(165,255,98,.28);
+  --surface-3:
+    #171e27;
 
-  --warning: #ffc861;
-  --danger: #ff7272;
+  --text:
+    #f7f9fb;
 
-  --radius-xl: 30px;
-  --radius-lg: 22px;
-  --radius-md: 17px;
-  --radius-sm: 12px;
+  --muted:
+    #8c97a5;
+
+  --muted-2:
+    #606b78;
+
+  --line:
+    rgba(255,255,255,.085);
+
+  --line-strong:
+    rgba(255,255,255,.15);
+
+  --accent:
+    #a8ff63;
+
+  --accent-soft:
+    rgba(168,255,99,.08);
+
+  --accent-border:
+    rgba(168,255,99,.28);
+
+  --blue:
+    #79b8ff;
+
+  --orange:
+    #ffc86a;
+
+  --red:
+    #ff7474;
+
+  --radius-xl:
+    30px;
+
+  --radius-lg:
+    22px;
+
+  --radius-md:
+    17px;
+
+  --radius-sm:
+    12px;
 
   --shadow:
-    0 30px 80px rgba(0,0,0,.35);
+    0 30px 80px rgba(0,0,0,.38);
 }
 
+
 html {
-  background: var(--bg);
-  color-scheme: dark;
-  scroll-behavior: smooth;
+
+  background:
+    var(--bg);
+
+  color-scheme:
+    dark;
+
+  scroll-behavior:
+    smooth;
 }
+
 
 body {
 
-  min-height: 100vh;
+  min-height:
+    100vh;
 
   background:
+
     radial-gradient(
-      circle at 50% -10%,
-      rgba(165,255,98,.055),
+      circle at 50% -15%,
+      rgba(168,255,99,.065),
       transparent 35%
     ),
+
     var(--bg);
 
-  color: var(--text);
+  color:
+    var(--text);
 
   font-family:
+
     -apple-system,
     BlinkMacSystemFont,
     "SF Pro Display",
@@ -85,1746 +166,2793 @@ body {
     Arial,
     sans-serif;
 
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing:
+    antialiased;
 
-  overflow-x: hidden;
+  overflow-x:
+    hidden;
 }
+
 
 button,
-input {
-  font: inherit;
+input,
+select {
+
+  font:
+    inherit;
 }
+
 
 button {
-  border: 0;
+
+  border:
+    0;
+
+  cursor:
+    pointer;
 }
 
+
 button:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+input:focus-visible,
+select:focus-visible {
+
+  outline:
+    2px solid var(--accent);
+
+  outline-offset:
+    3px;
 }
 
 
 /* =========================================================
    APP
-   ========================================================= */
+========================================================= */
 
-.app-shell {
+.app {
 
-  width: 100%;
-  max-width: 560px;
+  width:
+    min(100%, 620px);
 
-  min-height: 100vh;
+  min-height:
+    100vh;
 
-  margin: 0 auto;
-
-  position: relative;
+  margin:
+    auto;
 
   padding:
+
     env(safe-area-inset-top)
     16px
-    calc(90px + env(safe-area-inset-bottom))
+    calc(100px + env(safe-area-inset-bottom))
     16px;
 }
 
 
 /* =========================================================
-   TOP BAR
-   ========================================================= */
+   HEADER
+========================================================= */
 
-.topbar {
+.header {
 
-  height: 68px;
+  height:
+    68px;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display:
+    flex;
 
-  position: sticky;
-  top: 0;
+  align-items:
+    center;
 
-  z-index: 20;
+  justify-content:
+    space-between;
+
+  position:
+    sticky;
+
+  top:
+    0;
+
+  z-index:
+    50;
 
   background:
+
     linear-gradient(
       to bottom,
-      rgba(6,8,11,.94),
-      rgba(6,8,11,.74),
+      rgba(5,7,10,.96),
+      rgba(5,7,10,.8),
       transparent
     );
 
-  backdrop-filter: blur(16px);
+  backdrop-filter:
+    blur(18px);
 }
+
 
 .brand {
 
-  display: flex;
-  align-items: center;
+  display:
+    flex;
 
-  gap: 11px;
+  align-items:
+    center;
+
+  gap:
+    11px;
 }
+
 
 .brand-mark {
 
-  width: 38px;
-  height: 38px;
+  width:
+    40px;
 
-  display: grid;
-  place-items: center;
+  height:
+    40px;
 
-  border-radius: 13px;
+  display:
+    grid;
 
-  background: var(--accent);
+  place-items:
+    center;
 
-  color: #071006;
+  border-radius:
+    14px;
 
-  font-size: 17px;
-  font-weight: 900;
+  background:
+    var(--accent);
+
+  color:
+    #071006;
+
+  font-size:
+    18px;
+
+  font-weight:
+    950;
 
   box-shadow:
-    0 0 28px rgba(165,255,98,.13);
+    0 0 35px rgba(168,255,99,.13);
 }
+
 
 .brand-name {
 
-  font-size: 18px;
+  font-size:
+    18px;
 
-  letter-spacing: .14em;
+  letter-spacing:
+    .15em;
 
-  font-weight: 850;
+  font-weight:
+    900;
 }
+
 
 .brand-sub {
 
-  margin-top: 2px;
+  color:
+    var(--muted);
 
-  font-size: 8px;
+  font-size:
+    8px;
 
-  letter-spacing: .11em;
+  letter-spacing:
+    .11em;
 
-  color: var(--muted);
+  margin-top:
+    2px;
 }
+
 
 .system-status {
 
-  display: flex;
-  align-items: center;
-  gap: 7px;
+  display:
+    flex;
 
-  padding: 8px 11px;
+  align-items:
+    center;
 
-  border: 1px solid var(--line);
+  gap:
+    7px;
 
-  background: rgba(255,255,255,.025);
+  padding:
+    8px 11px;
 
-  border-radius: 999px;
+  border:
+    1px solid var(--line);
 
-  font-size: 9px;
+  background:
+    rgba(255,255,255,.025);
 
-  font-weight: 700;
+  border-radius:
+    999px;
 
-  color: #cbd3dc;
+  color:
+    #cbd4de;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
 }
 
-.status-light {
 
-  width: 7px;
-  height: 7px;
+.status-dot {
 
-  border-radius: 50%;
+  width:
+    7px;
 
-  background: var(--accent);
+  height:
+    7px;
 
-  box-shadow: 0 0 12px var(--accent);
+  border-radius:
+    50%;
+
+  background:
+    var(--accent);
+
+  box-shadow:
+    0 0 12px var(--accent);
+}
+
+
+.status-dot.busy {
+
+  background:
+    var(--orange);
+
+  box-shadow:
+    0 0 12px var(--orange);
+}
+
+
+.status-dot.error {
+
+  background:
+    var(--red);
+
+  box-shadow:
+    0 0 12px var(--red);
 }
 
 
 /* =========================================================
    HERO
-   ========================================================= */
+========================================================= */
 
 .hero {
 
-  padding: 34px 2px 20px;
+  padding:
+    32px 2px 22px;
 }
 
-.hero-kicker {
 
-  color: var(--accent);
+.kicker {
 
-  font-size: 9px;
+  color:
+    var(--accent);
 
-  font-weight: 850;
+  font-size:
+    9px;
 
-  letter-spacing: .18em;
+  font-weight:
+    900;
 
-  text-transform: uppercase;
+  letter-spacing:
+    .19em;
 
-  margin-bottom: 13px;
+  text-transform:
+    uppercase;
+
+  margin-bottom:
+    13px;
 }
 
-.hero-title {
 
-  font-size: clamp(40px, 10vw, 56px);
+.hero h1 {
 
-  line-height: .93;
+  font-size:
+    clamp(40px, 10vw, 58px);
 
-  letter-spacing: -.055em;
+  line-height:
+    .92;
 
-  font-weight: 800;
+  letter-spacing:
+    -.055em;
+
+  font-weight:
+    850;
 }
 
-.hero-title span {
 
-  color: var(--muted);
+.hero h1 span {
+
+  color:
+    var(--muted);
 }
 
-.hero-description {
 
-  max-width: 470px;
+.hero p {
 
-  margin-top: 17px;
+  max-width:
+    500px;
 
-  color: var(--muted);
+  margin-top:
+    17px;
 
-  font-size: 13px;
+  color:
+    var(--muted);
 
-  line-height: 1.65;
+  font-size:
+    13px;
+
+  line-height:
+    1.65;
 }
 
 
 /* =========================================================
-   LIVE CAMERA
-   ========================================================= */
+   MAIN LIVE CAMERA
+========================================================= */
 
-.camera-section {
+.camera-card {
 
-  margin-top: 15px;
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    var(--radius-xl);
+
+  padding:
+    10px;
+
+  background:
+    var(--surface);
+
+  box-shadow:
+    var(--shadow);
 }
 
-.camera-container {
 
-  position: relative;
+.camera {
 
-  width: 100%;
+  position:
+    relative;
 
-  height: 330px;
+  width:
+    100%;
 
-  overflow: hidden;
+  aspect-ratio:
+    4 / 3;
 
-  border-radius: var(--radius-xl);
+  overflow:
+    hidden;
 
-  border: 1px solid var(--line);
+  border-radius:
+    23px;
+
+  background:
+    #030405;
+}
+
+
+#video {
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  object-fit:
+    contain;
+
+  background:
+    #020304;
+
+  display:
+    none;
+}
+
+
+#overlay {
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  width:
+    100%;
+
+  height:
+    100%;
+
+  pointer-events:
+    none;
+}
+
+
+.camera-empty {
+
+  position:
+    absolute;
+
+  inset:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  text-align:
+    center;
+
+  padding:
+    30px;
 
   background:
 
     radial-gradient(
-      circle at 50% 40%,
-      rgba(165,255,98,.07),
-      transparent 40%
-    ),
-
-    #050607;
-
-  box-shadow: var(--shadow);
+      circle at center,
+      rgba(168,255,99,.075),
+      transparent 50%
+    );
 }
 
-.camera-video {
 
-  width: 100%;
-  height: 100%;
+.camera-empty-icon {
 
-  object-fit: cover;
+  width:
+    72px;
 
-  display: none;
+  height:
+    72px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  margin:
+    auto auto 16px;
+
+  border-radius:
+    23px;
+
+  background:
+    rgba(255,255,255,.045);
+
+  border:
+    1px solid var(--line);
+
+  font-size:
+    28px;
 }
 
-.camera-placeholder {
 
-  position: absolute;
+.camera-empty h2 {
 
-  inset: 0;
+  font-size:
+    18px;
 
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  padding: 35px;
+  margin-bottom:
+    7px;
 }
 
-.camera-placeholder-inner {
 
-  max-width: 280px;
+.camera-empty p {
+
+  color:
+    var(--muted);
+
+  max-width:
+    280px;
+
+  font-size:
+    11px;
+
+  line-height:
+    1.55;
 }
 
-.camera-placeholder-icon {
 
-  width: 68px;
-  height: 68px;
+.camera-tag {
 
-  margin: 0 auto 17px;
+  position:
+    absolute;
 
-  display: grid;
-  place-items: center;
+  top:
+    12px;
 
-  border-radius: 22px;
+  left:
+    12px;
 
-  background: rgba(255,255,255,.045);
+  padding:
+    7px 10px;
 
-  border: 1px solid var(--line);
+  border-radius:
+    9px;
 
-  font-size: 27px;
+  background:
+    rgba(0,0,0,.56);
+
+  backdrop-filter:
+    blur(10px);
+
+  border:
+    1px solid rgba(255,255,255,.08);
+
+  color:
+    #e2e8ee;
+
+  font-size:
+    8px;
+
+  font-weight:
+    850;
+
+  letter-spacing:
+    .12em;
 }
 
-.camera-placeholder h3 {
 
-  font-size: 17px;
+.camera-live {
 
-  margin-bottom: 7px;
+  position:
+    absolute;
+
+  top:
+    12px;
+
+  right:
+    12px;
+
+  display:
+    none;
+
+  align-items:
+    center;
+
+  gap:
+    6px;
+
+  padding:
+    7px 10px;
+
+  border-radius:
+    9px;
+
+  background:
+    rgba(0,0,0,.56);
+
+  backdrop-filter:
+    blur(10px);
+
+  color:
+    var(--accent);
+
+  font-size:
+    8px;
+
+  font-weight:
+    850;
 }
 
-.camera-placeholder p {
 
-  color: var(--muted);
+.camera-live.show {
 
-  font-size: 11px;
-
-  line-height: 1.55;
+  display:
+    flex;
 }
 
-.camera-label {
 
-  position: absolute;
+.camera-live::before {
 
-  top: 14px;
-  left: 14px;
+  content:
+    "";
 
-  padding: 7px 10px;
+  width:
+    6px;
 
-  border-radius: 9px;
+  height:
+    6px;
 
-  background: rgba(0,0,0,.55);
+  border-radius:
+    50%;
 
-  backdrop-filter: blur(12px);
+  background:
+    var(--accent);
 
-  border: 1px solid rgba(255,255,255,.08);
-
-  color: #dbe2ea;
-
-  font-size: 8px;
-
-  font-weight: 800;
-
-  letter-spacing: .13em;
+  box-shadow:
+    0 0 10px var(--accent);
 }
 
-.camera-live-dot {
 
-  position: absolute;
+.scan-corners {
 
-  top: 14px;
-  right: 14px;
+  position:
+    absolute;
 
-  display: none;
+  inset:
+    42px 32px;
 
-  align-items: center;
-  gap: 6px;
+  display:
+    none;
 
-  padding: 7px 10px;
+  border:
+    1px solid rgba(168,255,99,.48);
 
-  border-radius: 9px;
+  border-radius:
+    20px;
 
-  background: rgba(0,0,0,.55);
-
-  backdrop-filter: blur(12px);
-
-  font-size: 8px;
-
-  color: var(--accent);
-
-  font-weight: 800;
+  pointer-events:
+    none;
 }
 
-.camera-live-dot::before {
 
-  content: "";
+.scan-corners.show {
 
-  width: 6px;
-  height: 6px;
+  display:
+    block;
 
-  border-radius: 50%;
-
-  background: var(--accent);
-
-  box-shadow: 0 0 9px var(--accent);
+  animation:
+    breathe 2s infinite;
 }
 
-.camera-live-dot.visible {
-
-  display: flex;
-}
-
-.scan-frame {
-
-  position: absolute;
-
-  inset: 45px 38px;
-
-  display: none;
-
-  border: 1px solid rgba(165,255,98,.62);
-
-  border-radius: 25px;
-
-  pointer-events: none;
-}
-
-.scan-frame.visible {
-
-  display: block;
-
-  animation: scanPulse 2.2s ease-in-out infinite;
-}
-
-.scan-line {
-
-  position: absolute;
-
-  left: 5%;
-  right: 5%;
-
-  top: 50%;
-
-  height: 1px;
-
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--accent),
-    transparent
-  );
-
-  box-shadow: 0 0 12px var(--accent);
-
-  opacity: .7;
-}
 
 .camera-actions {
 
-  display: grid;
+  display:
+    grid;
 
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns:
+    1fr 1fr 1fr 1fr;
 
-  gap: 8px;
+  gap:
+    7px;
 
-  margin-top: 9px;
+  margin-top:
+    9px;
 }
 
-.action-button {
 
-  min-height: 48px;
+.btn {
 
-  border-radius: 14px;
+  min-height:
+    48px;
 
-  border: 1px solid var(--line);
+  border-radius:
+    14px;
 
-  background: var(--surface);
+  border:
+    1px solid var(--line);
 
-  color: var(--text);
+  background:
+    var(--surface-2);
 
-  font-size: 10px;
+  color:
+    var(--text);
 
-  font-weight: 800;
+  font-size:
+    9px;
 
-  cursor: pointer;
+  font-weight:
+    850;
 
   transition:
-    transform .2s,
-    background .2s,
-    border-color .2s;
+    .2s;
 }
 
-.action-button:hover {
 
-  background: var(--surface-2);
+.btn:hover {
 
-  border-color: var(--line-strong);
+  background:
+    var(--surface-3);
 
-  transform: translateY(-1px);
+  border-color:
+    var(--line-strong);
 }
 
-.action-button.primary {
 
-  background: var(--accent);
+.btn:active {
 
-  color: #071006;
-
-  border-color: var(--accent);
+  transform:
+    scale(.97);
 }
 
-.action-button:active {
 
-  transform: scale(.97);
+.btn.primary {
+
+  background:
+    var(--accent);
+
+  border-color:
+    var(--accent);
+
+  color:
+    #071006;
 }
 
 
 /* =========================================================
-   VOICE ASSISTANT
-   ========================================================= */
+   DETECTION STATUS
+========================================================= */
 
-.voice-panel {
+.detection-status {
 
-  margin-top: 14px;
+  display:
+    flex;
 
-  padding: 22px;
+  align-items:
+    center;
 
-  border-radius: var(--radius-xl);
+  gap:
+    8px;
 
-  border: 1px solid var(--line);
+  margin:
+    10px 3px 0;
+
+  color:
+    var(--muted);
+
+  font-size:
+    9px;
+}
+
+
+.detection-spinner {
+
+  width:
+    8px;
+
+  height:
+    8px;
+
+  border:
+    1px solid var(--muted-2);
+
+  border-top-color:
+    var(--accent);
+
+  border-radius:
+    50%;
+
+  display:
+    none;
+
+  animation:
+    spin .7s linear infinite;
+}
+
+
+.detection-spinner.show {
+
+  display:
+    block;
+}
+
+
+/* =========================================================
+   RESULT
+========================================================= */
+
+.result {
+
+  display:
+    none;
+
+  margin-top:
+    10px;
+
+  padding:
+    16px;
+
+  border:
+    1px solid var(--accent-border);
+
+  border-radius:
+    18px;
+
+  background:
+    var(--accent-soft);
+
+  animation:
+    fadeUp .25s ease;
+}
+
+
+.result.show {
+
+  display:
+    block;
+}
+
+
+.result-label {
+
+  color:
+    var(--accent);
+
+  font-size:
+    8px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .14em;
+}
+
+
+.result h3 {
+
+  margin-top:
+    8px;
+
+  font-size:
+    17px;
+}
+
+
+.result p {
+
+  margin-top:
+    6px;
+
+  color:
+    #bec7d1;
+
+  font-size:
+    11px;
+
+  line-height:
+    1.55;
+}
+
+
+.result-tags {
+
+  display:
+    flex;
+
+  flex-wrap:
+    wrap;
+
+  gap:
+    6px;
+
+  margin-top:
+    11px;
+}
+
+
+.result-tag {
+
+  padding:
+    7px 9px;
+
+  border-radius:
+    9px;
+
+  background:
+    rgba(255,255,255,.055);
+
+  border:
+    1px solid var(--line);
+
+  color:
+    #d6dde5;
+
+  font-size:
+    9px;
+}
+
+
+/* =========================================================
+   VOICE PANEL
+========================================================= */
+
+.voice-card {
+
+  margin-top:
+    14px;
+
+  padding:
+    22px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    var(--radius-xl);
 
   background:
 
     radial-gradient(
       circle at 50% 0%,
-      rgba(165,255,98,.08),
+      rgba(168,255,99,.085),
       transparent 48%
     ),
 
     var(--surface);
 
-  text-align: center;
+  text-align:
+    center;
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 }
 
-.voice-state {
 
-  color: var(--muted);
+.voice-status {
 
-  font-size: 10px;
+  color:
+    var(--muted);
 
-  font-weight: 600;
+  font-size:
+    10px;
 
-  margin-bottom: 16px;
+  margin-bottom:
+    16px;
 }
+
 
 .voice-button {
 
-  width: 92px;
-  height: 92px;
+  width:
+    96px;
 
-  margin: auto;
+  height:
+    96px;
 
-  display: grid;
-  place-items: center;
+  display:
+    grid;
 
-  border-radius: 50%;
+  place-items:
+    center;
+
+  margin:
+    auto;
+
+  border-radius:
+    50%;
 
   background:
-    radial-gradient(
-      circle,
-      #172315,
-      #101710
-    );
+    #111910;
 
-  border: 1px solid var(--accent-border);
+  border:
+    1px solid var(--accent-border);
 
-  color: var(--accent);
+  color:
+    var(--accent);
 
-  cursor: pointer;
+  font-size:
+    30px;
 
   box-shadow:
-    0 0 0 11px rgba(165,255,98,.025),
-    0 0 45px rgba(165,255,98,.07);
 
-  transition: .25s;
+    0 0 0 11px rgba(168,255,99,.025),
+
+    0 0 50px rgba(168,255,99,.08);
+
+  transition:
+    .25s;
 }
+
 
 .voice-button:hover {
 
-  transform: scale(1.035);
-
-  box-shadow:
-    0 0 0 14px rgba(165,255,98,.03),
-    0 0 55px rgba(165,255,98,.1);
+  transform:
+    scale(1.04);
 }
+
 
 .voice-button.listening {
 
-  animation: voicePulse 1.25s infinite;
+  animation:
+    voicePulse 1.2s infinite;
 }
 
-.mic-symbol {
-
-  font-size: 30px;
-}
 
 .voice-transcript {
 
-  min-height: 25px;
+  min-height:
+    24px;
 
-  margin-top: 17px;
+  margin-top:
+    17px;
 
-  font-size: 16px;
+  font-size:
+    16px;
 
-  line-height: 1.4;
+  font-weight:
+    750;
 
-  font-weight: 700;
-
-  letter-spacing: -.01em;
+  line-height:
+    1.4;
 }
 
-.voice-hint {
 
-  margin-top: 7px;
+.voice-help {
 
-  color: var(--muted);
+  color:
+    var(--muted);
 
-  font-size: 9px;
+  font-size:
+    9px;
+
+  margin-top:
+    7px;
 }
 
 
 /* =========================================================
-   RESPONSE CARD
-   ========================================================= */
+   RESPONSE
+========================================================= */
 
-.response-card {
+.response {
 
-  display: none;
+  display:
+    none;
 
-  margin-top: 11px;
+  margin-top:
+    11px;
 
-  padding: 16px;
+  padding:
+    15px;
 
-  border-radius: 19px;
+  border:
+    1px solid var(--accent-border);
 
-  border: 1px solid var(--accent-border);
+  border-radius:
+    18px;
 
-  background: var(--accent-soft);
+  background:
+    var(--accent-soft);
 
-  text-align: left;
+  text-align:
+    left;
 }
 
-.response-card.visible {
 
-  display: block;
+.response.show {
 
-  animation: fadeUp .3s ease;
+  display:
+    block;
+
+  animation:
+    fadeUp .25s ease;
 }
+
 
 .response-label {
 
-  color: var(--accent);
+  color:
+    var(--accent);
 
-  font-size: 8px;
+  font-size:
+    8px;
 
-  font-weight: 850;
+  font-weight:
+    900;
 
-  letter-spacing: .14em;
+  letter-spacing:
+    .14em;
 }
+
 
 .response-text {
 
-  margin-top: 8px;
+  margin-top:
+    7px;
 
-  font-size: 14px;
+  font-size:
+    13px;
 
-  line-height: 1.55;
+  line-height:
+    1.55;
 
-  font-weight: 600;
+  font-weight:
+    600;
 }
+
 
 .response-actions {
 
-  display: flex;
+  display:
+    flex;
 
-  gap: 8px;
+  flex-wrap:
+    wrap;
 
-  margin-top: 12px;
+  gap:
+    7px;
+
+  margin-top:
+    11px;
 }
 
-.small-button {
 
-  padding: 9px 11px;
+.mini-btn {
 
-  border-radius: 10px;
+  padding:
+    9px 11px;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid var(--line);
 
-  background: rgba(0,0,0,.18);
+  border-radius:
+    10px;
 
-  color: white;
+  background:
+    rgba(0,0,0,.18);
 
-  font-size: 9px;
+  color:
+    white;
 
-  font-weight: 750;
+  font-size:
+    9px;
 
-  cursor: pointer;
+  font-weight:
+    800;
 }
 
 
 /* =========================================================
-   QUICK ACTIONS
-   ========================================================= */
+   FEATURES
+========================================================= */
 
 .section {
 
-  margin-top: 25px;
+  margin-top:
+    26px;
 }
 
-.section-heading {
 
-  display: flex;
+.section-header {
 
-  align-items: center;
+  display:
+    flex;
 
-  justify-content: space-between;
+  align-items:
+    center;
 
-  margin: 0 2px 10px;
+  justify-content:
+    space-between;
+
+  margin:
+    0 2px 10px;
 }
 
-.section-heading strong {
 
-  font-size: 12px;
+.section-header strong {
 
-  font-weight: 800;
+  font-size:
+    12px;
+
+  font-weight:
+    850;
 }
 
-.section-heading span {
 
-  color: var(--muted);
+.section-header span {
 
-  font-size: 9px;
+  color:
+    var(--muted);
+
+  font-size:
+    9px;
 }
+
 
 .feature-grid {
 
-  display: grid;
+  display:
+    grid;
 
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns:
+    1fr 1fr;
 
-  gap: 9px;
+  gap:
+    9px;
 }
 
-.feature-card {
 
-  min-height: 105px;
+.feature {
 
-  padding: 16px;
+  min-height:
+    112px;
 
-  border-radius: var(--radius-lg);
+  padding:
+    16px;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid var(--line);
 
-  background: var(--surface);
+  border-radius:
+    var(--radius-lg);
 
-  color: white;
+  background:
+    var(--surface);
 
-  text-align: left;
+  color:
+    white;
 
-  cursor: pointer;
+  text-align:
+    left;
 
-  transition: .2s;
+  transition:
+    .2s;
 }
 
-.feature-card:hover {
 
-  transform: translateY(-2px);
+.feature:hover {
 
-  background: var(--surface-2);
+  transform:
+    translateY(-2px);
 
-  border-color: var(--line-strong);
+  border-color:
+    var(--line-strong);
+
+  background:
+    var(--surface-2);
 }
+
 
 .feature-icon {
 
-  width: 34px;
-  height: 34px;
+  width:
+    36px;
 
-  display: grid;
-  place-items: center;
+  height:
+    36px;
 
-  margin-bottom: 12px;
+  display:
+    grid;
 
-  border-radius: 11px;
+  place-items:
+    center;
 
-  background: rgba(255,255,255,.045);
+  margin-bottom:
+    11px;
 
-  font-size: 17px;
+  border-radius:
+    11px;
+
+  background:
+    rgba(255,255,255,.045);
+
+  font-size:
+    18px;
 }
 
-.feature-card strong {
 
-  display: block;
+.feature strong {
 
-  font-size: 12px;
+  display:
+    block;
+
+  font-size:
+    12px;
 }
 
-.feature-card small {
 
-  display: block;
+.feature small {
 
-  margin-top: 5px;
+  display:
+    block;
 
-  color: var(--muted);
+  margin-top:
+    5px;
 
-  font-size: 9px;
+  color:
+    var(--muted);
 
-  line-height: 1.4;
+  font-size:
+    9px;
+
+  line-height:
+    1.4;
 }
 
 
 /* =========================================================
-   MEMORY CARD
-   ========================================================= */
+   MEMORY PREVIEW
+========================================================= */
 
-.memory-card {
+.memory-preview {
 
-  padding: 15px;
+  padding:
+    15px;
 
-  border-radius: var(--radius-lg);
+  border:
+    1px solid var(--line);
 
-  border: 1px solid var(--line);
+  border-radius:
+    var(--radius-lg);
 
-  background: var(--surface);
+  background:
+    var(--surface);
 }
+
+
+.memory-empty {
+
+  color:
+    var(--muted);
+
+  text-align:
+    center;
+
+  padding:
+    15px;
+
+  font-size:
+    10px;
+
+  line-height:
+    1.5;
+}
+
 
 .memory-item {
 
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 12px;
+  gap:
+    12px;
 }
 
-.memory-thumb {
 
-  width: 48px;
-  height: 48px;
+.memory-icon {
 
-  display: grid;
-  place-items: center;
+  width:
+    48px;
 
-  border-radius: 15px;
+  height:
+    48px;
 
-  background: var(--surface-3);
+  display:
+    grid;
 
-  font-size: 22px;
+  place-items:
+    center;
+
+  border-radius:
+    15px;
+
+  background:
+    var(--surface-3);
+
+  font-size:
+    22px;
 }
 
-.memory-content {
 
-  flex: 1;
+.memory-info {
 
-  min-width: 0;
+  flex:
+    1;
+
+  min-width:
+    0;
 }
 
-.memory-content strong {
 
-  display: block;
+.memory-info strong {
 
-  font-size: 13px;
+  display:
+    block;
+
+  font-size:
+    13px;
 }
 
-.memory-content p {
 
-  margin-top: 4px;
+.memory-info p {
 
-  color: var(--muted);
+  margin-top:
+    4px;
 
-  font-size: 9px;
+  color:
+    var(--muted);
 
-  line-height: 1.4;
+  font-size:
+    9px;
+
+  line-height:
+    1.45;
 }
 
-.memory-status {
 
-  color: var(--accent);
+.memory-badge {
 
-  font-size: 8px;
+  color:
+    var(--accent);
 
-  font-weight: 850;
+  font-size:
+    8px;
 
-  letter-spacing: .08em;
+  font-weight:
+    900;
+}
+
+
+/* =========================================================
+   SHEET
+========================================================= */
+
+.sheet-backdrop {
+
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  z-index:
+    200;
+
+  display:
+    none;
+
+  align-items:
+    flex-end;
+
+  justify-content:
+    center;
+
+  background:
+    rgba(0,0,0,.76);
+
+  backdrop-filter:
+    blur(18px);
+}
+
+
+.sheet-backdrop.open {
+
+  display:
+    flex;
+}
+
+
+.sheet {
+
+  width:
+    min(620px,100%);
+
+  max-height:
+    92vh;
+
+  overflow-y:
+    auto;
+
+  padding:
+    12px 18px calc(28px + env(safe-area-inset-bottom));
+
+  border-top:
+    1px solid var(--line-strong);
+
+  border-radius:
+    30px 30px 0 0;
+
+  background:
+    #0a0e13;
+
+  animation:
+    sheetUp .25s ease;
+}
+
+
+.sheet-handle {
+
+  width:
+    42px;
+
+  height:
+    4px;
+
+  margin:
+    0 auto 19px;
+
+  border-radius:
+    99px;
+
+  background:
+    #39414c;
+}
+
+
+.sheet-header {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    space-between;
+
+  margin-bottom:
+    17px;
+}
+
+
+.sheet-header h2 {
+
+  font-size:
+    21px;
+
+  letter-spacing:
+    -.025em;
+}
+
+
+.close {
+
+  width:
+    36px;
+
+  height:
+    36px;
+
+  border-radius:
+    50%;
+
+  border:
+    1px solid var(--line);
+
+  background:
+    var(--surface-2);
+
+  color:
+    white;
+
+  font-size:
+    20px;
+}
+
+
+.sheet-description {
+
+  color:
+    var(--muted);
+
+  font-size:
+    11px;
+
+  line-height:
+    1.55;
+
+  margin-bottom:
+    15px;
+}
+
+
+.sheet-button {
+
+  width:
+    100%;
+
+  padding:
+    16px;
+
+  margin-bottom:
+    9px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    17px;
+
+  background:
+    var(--surface);
+
+  color:
+    white;
+
+  text-align:
+    left;
+}
+
+
+.sheet-button strong {
+
+  display:
+    block;
+
+  font-size:
+    13px;
+}
+
+
+.sheet-button p {
+
+  margin-top:
+    5px;
+
+  color:
+    var(--muted);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.45;
+}
+
+
+.sheet-button.primary {
+
+  background:
+    var(--accent);
+
+  color:
+    #071006;
+
+  border-color:
+    var(--accent);
+}
+
+
+/* =========================================================
+   OCR
+========================================================= */
+
+.ocr-preview {
+
+  position:
+    relative;
+
+  min-height:
+    230px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    22px;
+
+  background:
+    var(--surface);
+
+  overflow:
+    hidden;
+}
+
+
+.ocr-image {
+
+  max-width:
+    100%;
+
+  max-height:
+    280px;
+
+  display:
+    none;
+}
+
+
+.document-demo {
+
+  width:
+    72%;
+
+  padding:
+    24px 18px;
+
+  background:
+    #e9e8e2;
+
+  color:
+    #181a1c;
+
+  border-radius:
+    5px;
+
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.35);
+}
+
+
+.doc-title {
+
+  width:
+    65%;
+
+  height:
+    9px;
+
+  margin:
+    0 auto 16px;
+
+  background:
+    #5b6064;
+
+  border-radius:
+    3px;
+}
+
+
+.doc-line {
+
+  height:
+    5px;
+
+  margin:
+    9px 0;
+
+  background:
+    #b6b7b3;
+
+  border-radius:
+    4px;
+}
+
+
+.ocr-controls {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    8px;
+
+  margin-top:
+    10px;
+}
+
+
+.ocr-result {
+
+  display:
+    none;
+
+  margin-top:
+    11px;
+
+  padding:
+    15px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    17px;
+
+  background:
+    var(--surface);
+}
+
+
+.ocr-result.show {
+
+  display:
+    block;
+}
+
+
+.ocr-label {
+
+  color:
+    var(--accent);
+
+  font-size:
+    8px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .13em;
+}
+
+
+.ocr-result-text {
+
+  margin-top:
+    8px;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.55;
+}
+
+
+/* =========================================================
+   TRANSLATION
+========================================================= */
+
+.language-row {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr auto 1fr;
+
+  align-items:
+    center;
+
+  gap:
+    8px;
+
+  margin-top:
+    12px;
+}
+
+
+.language-select {
+
+  width:
+    100%;
+
+  min-height:
+    45px;
+
+  padding:
+    0 10px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    12px;
+
+  background:
+    var(--surface-2);
+
+  color:
+    white;
+
+  font-size:
+    11px;
+}
+
+
+.language-arrow {
+
+  color:
+    var(--accent);
+
+  font-weight:
+    900;
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.location-card {
+
+  padding:
+    16px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    19px;
+
+  background:
+    var(--surface);
+
+  margin-bottom:
+    10px;
+}
+
+
+.location-big {
+
+  font-size:
+    18px;
+
+  font-weight:
+    800;
+}
+
+
+.location-small {
+
+  margin-top:
+    6px;
+
+  color:
+    var(--muted);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.5;
+}
+
+
+.coordinate-row {
+
+  display:
+    grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap:
+    8px;
+
+  margin-top:
+    10px;
+}
+
+
+.coordinate {
+
+  padding:
+    10px;
+
+  border-radius:
+    11px;
+
+  background:
+    var(--surface-2);
+
+  color:
+    var(--muted);
+
+  font-size:
+    9px;
+}
+
+
+/* =========================================================
+   ROUTE
+========================================================= */
+
+.destination-input {
+
+  width:
+    100%;
+
+  min-height:
+    48px;
+
+  padding:
+    0 14px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    14px;
+
+  background:
+    var(--surface-2);
+
+  color:
+    white;
+
+  font-size:
+    12px;
+}
+
+
+.route-button {
+
+  width:
+    100%;
+
+  min-height:
+    48px;
+
+  margin-top:
+    8px;
+
+  border-radius:
+    14px;
+
+  background:
+    var(--accent);
+
+  color:
+    #071006;
+
+  font-size:
+    10px;
+
+  font-weight:
+    900;
+}
+
+
+#map {
+
+  width:
+    100%;
+
+  height:
+    300px;
+
+  margin-top:
+    12px;
+
+  border-radius:
+    20px;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid var(--line);
+
+  display:
+    none;
+}
+
+
+.route-info {
+
+  margin-top:
+    10px;
+
+  padding:
+    14px;
+
+  border-radius:
+    16px;
+
+  background:
+    var(--surface);
+
+  border:
+    1px solid var(--line);
+
+  display:
+    none;
+}
+
+
+.route-info.show {
+
+  display:
+    block;
+}
+
+
+.route-info strong {
+
+  font-size:
+    14px;
+}
+
+
+.route-info p {
+
+  color:
+    var(--muted);
+
+  font-size:
+    10px;
+
+  margin-top:
+    5px;
+
+  line-height:
+    1.5;
+}
+
+
+.turn-list {
+
+  margin-top:
+    10px;
+}
+
+
+.turn {
+
+  padding:
+    10px 0;
+
+  border-bottom:
+    1px solid var(--line);
+
+  font-size:
+    10px;
+
+  color:
+    #c8d0d9;
+}
+
+
+.turn:last-child {
+
+  border-bottom:
+    0;
+}
+
+
+/* =========================================================
+   MEMORY LIST
+========================================================= */
+
+.memory-large {
+
+  padding:
+    15px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    18px;
+
+  background:
+    var(--surface);
+
+  margin-bottom:
+    9px;
+}
+
+
+.memory-top {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    12px;
+}
+
+
+.memory-large-icon {
+
+  width:
+    48px;
+
+  height:
+    48px;
+
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  border-radius:
+    15px;
+
+  background:
+    var(--surface-3);
+
+  font-size:
+    22px;
+}
+
+
+.memory-large-info {
+
+  flex:
+    1;
+}
+
+
+.memory-large-info strong {
+
+  font-size:
+    13px;
+}
+
+
+.memory-large-info p {
+
+  color:
+    var(--muted);
+
+  margin-top:
+    4px;
+
+  font-size:
+    9px;
+
+  line-height:
+    1.4;
+}
+
+
+.delete-memory {
+
+  background:
+    transparent;
+
+  color:
+    var(--muted);
+
+  font-size:
+    18px;
+}
+
+
+.memory-meta {
+
+  margin-top:
+    12px;
+
+  padding-top:
+    11px;
+
+  border-top:
+    1px solid var(--line);
+
+  color:
+    var(--muted);
+
+  font-size:
+    9px;
+
+  line-height:
+    1.5;
+}
+
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+.history-item {
+
+  padding:
+    13px 0;
+
+  border-bottom:
+    1px solid var(--line);
+}
+
+
+.history-role {
+
+  color:
+    var(--accent);
+
+  font-size:
+    8px;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .1em;
+}
+
+
+.history-text {
+
+  margin-top:
+    6px;
+
+  font-size:
+    11px;
+
+  line-height:
+    1.5;
+}
+
+
+.history-time {
+
+  margin-top:
+    4px;
+
+  color:
+    var(--muted-2);
+
+  font-size:
+    8px;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.accessibility-card {
+
+  margin-top:
+    15px;
+
+  padding:
+    15px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    19px;
+
+  background:
+    var(--surface);
+
+  display:
+    flex;
+
+  gap:
+    12px;
+
+  align-items:
+    flex-start;
+}
+
+
+.accessibility-icon {
+
+  font-size:
+    22px;
+}
+
+
+.accessibility-card p {
+
+  color:
+    var(--muted);
+
+  font-size:
+    9px;
+
+  line-height:
+    1.55;
 }
 
 
 /* =========================================================
    BOTTOM NAV
-   ========================================================= */
+========================================================= */
 
 .bottom-nav {
 
-  position: fixed;
+  position:
+    fixed;
 
-  left: 50%;
+  left:
+    50%;
 
-  bottom: calc(10px + env(safe-area-inset-bottom));
+  bottom:
+    calc(10px + env(safe-area-inset-bottom));
 
-  transform: translateX(-50%);
+  transform:
+    translateX(-50%);
 
-  width: min(calc(100% - 24px), 530px);
+  width:
+    min(calc(100% - 24px), 580px);
 
-  height: 66px;
-
-  display: grid;
-
-  grid-template-columns: repeat(4,1fr);
-
-  padding: 6px;
-
-  border: 1px solid var(--line);
-
-  border-radius: 22px;
-
-  background:
-    rgba(12,16,21,.9);
-
-  backdrop-filter: blur(25px);
-
-  z-index: 100;
-
-  box-shadow: 0 20px 60px rgba(0,0,0,.5);
-}
-
-.nav-button {
-
-  border-radius: 17px;
-
-  background: transparent;
-
-  color: var(--muted);
-
-  cursor: pointer;
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  justify-content: center;
-
-  gap: 4px;
-
-  font-size: 17px;
-
-  transition: .2s;
-}
-
-.nav-button span {
-
-  font-size: 8px;
-
-  font-weight: 700;
-}
-
-.nav-button.active {
-
-  background: rgba(165,255,98,.08);
-
-  color: var(--accent);
-}
-
-
-/* =========================================================
-   FULL SCREEN SHEET
-   ========================================================= */
-
-.sheet-backdrop {
-
-  position: fixed;
-
-  inset: 0;
-
-  display: none;
-
-  align-items: flex-end;
-
-  justify-content: center;
-
-  background: rgba(0,0,0,.72);
-
-  backdrop-filter: blur(18px);
-
-  z-index: 200;
-}
-
-.sheet-backdrop.open {
-
-  display: flex;
-}
-
-.sheet {
-
-  width: min(560px,100%);
-
-  max-height: 91vh;
-
-  overflow-y: auto;
+  height:
+    68px;
 
   padding:
-    12px
-    18px
-    calc(25px + env(safe-area-inset-bottom));
+    6px;
 
-  border-top:
-    1px solid var(--line-strong);
+  display:
+    grid;
 
-  border-radius: 30px 30px 0 0;
-
-  background: #0b0f14;
-
-  animation: sheetUp .28s ease;
-}
-
-.sheet-handle {
-
-  width: 42px;
-  height: 4px;
-
-  margin: 0 auto 19px;
-
-  border-radius: 99px;
-
-  background: #39414b;
-}
-
-.sheet-header {
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  margin-bottom: 18px;
-}
-
-.sheet-header h2 {
-
-  font-size: 21px;
-
-  letter-spacing: -.02em;
-}
-
-.close-button {
-
-  width: 35px;
-  height: 35px;
-
-  border-radius: 50%;
-
-  border: 1px solid var(--line);
-
-  background: var(--surface-2);
-
-  color: white;
-
-  cursor: pointer;
-
-  font-size: 20px;
-}
-
-
-/* =========================================================
-   SHEET COMPONENTS
-   ========================================================= */
-
-.sheet-description {
-
-  color: var(--muted);
-
-  font-size: 11px;
-
-  line-height: 1.55;
-
-  margin-bottom: 15px;
-}
-
-.big-option {
-
-  width: 100%;
-
-  padding: 17px;
-
-  margin-bottom: 9px;
-
-  border-radius: 17px;
-
-  border: 1px solid var(--line);
-
-  background: var(--surface);
-
-  color: white;
-
-  text-align: left;
-
-  cursor: pointer;
-}
-
-.big-option strong {
-
-  display: block;
-
-  font-size: 13px;
-}
-
-.big-option p {
-
-  color: var(--muted);
-
-  margin-top: 5px;
-
-  font-size: 10px;
-
-  line-height: 1.45;
-}
-
-.big-option:hover {
-
-  border-color: var(--accent-border);
-
-  background: var(--surface-2);
-}
-
-
-/* =========================================================
-   FIND MODE
-   ========================================================= */
-
-.find-visual {
-
-  height: 220px;
-
-  display: grid;
-
-  place-items: center;
-
-  border-radius: 23px;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(165,255,98,.08),
-      transparent 52%
-    ),
-    var(--surface);
-
-  border: 1px solid var(--line);
-}
-
-.find-object {
-
-  width: 100px;
-  height: 100px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 50%;
-
-  background: rgba(165,255,98,.08);
+  grid-template-columns:
+    repeat(4,1fr);
 
   border:
-    1px solid rgba(165,255,98,.25);
+    1px solid var(--line);
 
-  font-size: 47px;
-
-  animation: searchPulse 1.7s infinite;
-}
-
-.find-status {
-
-  text-align: center;
-
-  margin-top: 15px;
-
-  font-size: 15px;
-
-  font-weight: 750;
-}
-
-.find-direction {
-
-  margin-top: 10px;
-
-  padding: 15px;
-
-  border-radius: 17px;
-
-  background: var(--surface);
-
-  border: 1px solid var(--line);
-
-  text-align: center;
-}
-
-.find-direction strong {
-
-  color: var(--accent);
-
-  font-size: 18px;
-}
-
-.find-direction p {
-
-  margin-top: 5px;
-
-  color: var(--muted);
-
-  font-size: 10px;
-}
-
-
-/* =========================================================
-   READ MODE
-   ========================================================= */
-
-.read-preview {
-
-  min-height: 220px;
-
-  padding: 25px;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  text-align: center;
-
-  border-radius: 23px;
-
-  border: 1px solid var(--line);
+  border-radius:
+    23px;
 
   background:
+    rgba(11,15,20,.92);
 
-    linear-gradient(
-      135deg,
-      #171c22,
-      #0c1015
-    );
-}
+  backdrop-filter:
+    blur(24px);
 
-.document {
+  z-index:
+    150;
 
-  width: 78%;
-
-  padding: 25px 18px;
-
-  background: #e8e7e1;
-
-  color: #191b1d;
-
-  border-radius: 5px;
-
-  box-shadow: 0 20px 50px rgba(0,0,0,.35);
-
-  transform: rotate(-1deg);
-}
-
-.document .line {
-
-  height: 5px;
-
-  margin: 8px 0;
-
-  border-radius: 3px;
-
-  background: #b9b9b4;
-}
-
-.document .title {
-
-  height: 10px;
-
-  width: 65%;
-
-  margin: 0 auto 17px;
-
-  background: #5e6264;
-
-  border-radius: 3px;
-}
-
-.read-result {
-
-  margin-top: 12px;
-
-  padding: 15px;
-
-  border-radius: 17px;
-
-  background: var(--surface);
-
-  border: 1px solid var(--line);
-
-  display: none;
-}
-
-.read-result.show {
-
-  display: block;
-}
-
-.read-result-label {
-
-  color: var(--accent);
-
-  font-size: 8px;
-
-  font-weight: 850;
-
-  letter-spacing: .13em;
-}
-
-.read-result h3 {
-
-  margin-top: 8px;
-
-  font-size: 16px;
-}
-
-.read-result p {
-
-  color: var(--muted);
-
-  margin-top: 6px;
-
-  font-size: 11px;
-
-  line-height: 1.5;
+  box-shadow:
+    0 25px 70px rgba(0,0,0,.48);
 }
 
 
-/* =========================================================
-   GUIDE
-   ========================================================= */
+.nav {
 
-.map {
+  display:
+    flex;
 
-  height: 260px;
+  flex-direction:
+    column;
 
-  position: relative;
+  align-items:
+    center;
 
-  overflow: hidden;
+  justify-content:
+    center;
 
-  border-radius: 22px;
+  gap:
+    4px;
+
+  border-radius:
+    17px;
 
   background:
-    linear-gradient(
-      35deg,
-      transparent 47%,
-      rgba(255,255,255,.075) 48%,
-      rgba(255,255,255,.075) 52%,
-      transparent 53%
-    ),
-    linear-gradient(
-      -25deg,
-      transparent 47%,
-      rgba(255,255,255,.06) 48%,
-      rgba(255,255,255,.06) 52%,
-      transparent 53%
-    ),
-    #0a0e13;
+    transparent;
 
-  border: 1px solid var(--line);
-}
+  color:
+    var(--muted);
 
-.route {
-
-  position: absolute;
-
-  width: 5px;
-  height: 180px;
-
-  left: 48%;
-  top: 36px;
-
-  background: var(--accent);
-
-  transform: rotate(34deg);
-
-  border-radius: 10px;
-
-  box-shadow: 0 0 18px rgba(165,255,98,.3);
-}
-
-.map-start,
-.map-end {
-
-  position: absolute;
-
-  font-size: 27px;
-}
-
-.map-start {
-
-  left: 18%;
-
-  bottom: 23px;
-}
-
-.map-end {
-
-  right: 19%;
-
-  top: 22px;
-}
-
-.guide-info {
-
-  margin-top: 13px;
-
-  padding: 15px;
-
-  border-radius: 17px;
-
-  background: var(--surface);
-
-  border: 1px solid var(--line);
-}
-
-.guide-info strong {
-
-  font-size: 14px;
-}
-
-.guide-info p {
-
-  color: var(--muted);
-
-  font-size: 10px;
-
-  margin-top: 5px;
-
-  line-height: 1.45;
+  font-size:
+    17px;
 }
 
 
-/* =========================================================
-   CHAT / HISTORY
-   ========================================================= */
+.nav span {
 
-.history-item {
+  font-size:
+    8px;
 
-  padding: 14px 0;
-
-  border-bottom: 1px solid var(--line);
-}
-
-.history-role {
-
-  color: var(--accent);
-
-  font-size: 8px;
-
-  font-weight: 850;
-
-  letter-spacing: .1em;
-}
-
-.history-text {
-
-  margin-top: 6px;
-
-  font-size: 12px;
-
-  line-height: 1.5;
-}
-
-.empty-state {
-
-  padding: 45px 20px;
-
-  text-align: center;
-
-  color: var(--muted);
-
-  font-size: 11px;
-
-  line-height: 1.6;
+  font-weight:
+    800;
 }
 
 
-/* =========================================================
-   MEMORY MANAGER
-   ========================================================= */
+.nav.active {
 
-.memory-large {
+  color:
+    var(--accent);
 
-  padding: 16px;
-
-  border-radius: 20px;
-
-  border: 1px solid var(--line);
-
-  background: var(--surface);
-
-  margin-bottom: 9px;
-}
-
-.memory-large-top {
-
-  display: flex;
-
-  gap: 13px;
-
-  align-items: center;
-}
-
-.memory-large-icon {
-
-  width: 52px;
-  height: 52px;
-
-  display: grid;
-
-  place-items: center;
-
-  border-radius: 16px;
-
-  background: var(--surface-3);
-
-  font-size: 24px;
-}
-
-.memory-large-info {
-
-  flex: 1;
-}
-
-.memory-large-info strong {
-
-  font-size: 14px;
-}
-
-.memory-large-info p {
-
-  color: var(--muted);
-
-  margin-top: 4px;
-
-  font-size: 10px;
-}
-
-.memory-delete {
-
-  background: transparent;
-
-  color: var(--muted);
-
-  cursor: pointer;
-
-  font-size: 16px;
-}
-
-.memory-large-meta {
-
-  margin-top: 13px;
-
-  padding-top: 12px;
-
-  border-top: 1px solid var(--line);
-
-  color: var(--muted);
-
-  font-size: 9px;
-
-  line-height: 1.5;
+  background:
+    rgba(168,255,99,.08);
 }
 
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
 .toast {
 
-  position: fixed;
+  position:
+    fixed;
 
-  left: 50%;
+  left:
+    50%;
 
-  bottom: 90px;
+  bottom:
+    91px;
 
-  z-index: 500;
+  z-index:
+    600;
 
-  max-width: calc(100% - 30px);
+  max-width:
+    calc(100% - 30px);
+
+  padding:
+    12px 16px;
+
+  border-radius:
+    14px;
+
+  background:
+    #eaffdf;
+
+  color:
+    #071006;
+
+  font-size:
+    10px;
+
+  font-weight:
+    850;
+
+  text-align:
+    center;
+
+  opacity:
+    0;
 
   transform:
-    translateX(-50%)
-    translateY(20px);
+    translateX(-50%) translateY(15px);
 
-  padding: 12px 16px;
+  pointer-events:
+    none;
 
-  border-radius: 14px;
-
-  background: #eaffdf;
-
-  color: #081006;
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  text-align: center;
-
-  opacity: 0;
-
-  pointer-events: none;
-
-  transition: .25s;
+  transition:
+    .25s;
 }
+
 
 .toast.show {
 
-  opacity: 1;
+  opacity:
+    1;
 
   transform:
-    translateX(-50%)
-    translateY(0);
+    translateX(-50%) translateY(0);
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.loading-overlay {
+
+  position:
+    fixed;
+
+  inset:
+    0;
+
+  z-index:
+    700;
+
+  display:
+    none;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  background:
+    rgba(5,7,10,.88);
+
+  backdrop-filter:
+    blur(16px);
+}
+
+
+.loading-overlay.show {
+
+  display:
+    flex;
+}
+
+
+.loading-card {
+
+  width:
+    min(340px, calc(100% - 40px));
+
+  padding:
+    25px;
+
+  border:
+    1px solid var(--line);
+
+  border-radius:
+    25px;
+
+  background:
+    var(--surface);
+
+  text-align:
+    center;
+}
+
+
+.loader {
+
+  width:
+    38px;
+
+  height:
+    38px;
+
+  margin:
+    0 auto 15px;
+
+  border:
+    2px solid var(--line);
+
+  border-top-color:
+    var(--accent);
+
+  border-radius:
+    50%;
+
+  animation:
+    spin .7s linear infinite;
+}
+
+
+.loading-card h3 {
+
+  font-size:
+    16px;
+}
+
+
+.loading-card p {
+
+  margin-top:
+    6px;
+
+  color:
+    var(--muted);
+
+  font-size:
+    10px;
+
+  line-height:
+    1.5;
 }
 
 
 /* =========================================================
    ANIMATIONS
-   ========================================================= */
+========================================================= */
+
+@keyframes spin {
+
+  to {
+    transform:
+      rotate(360deg);
+  }
+
+}
+
+
+@keyframes breathe {
+
+  0%,100% {
+    opacity:
+      .35;
+  }
+
+  50% {
+    opacity:
+      1;
+  }
+
+}
+
 
 @keyframes voicePulse {
 
   0%,100% {
 
     box-shadow:
-      0 0 0 0 rgba(165,255,98,.18),
-      0 0 45px rgba(165,255,98,.07);
+      0 0 0 0 rgba(168,255,99,.18),
+      0 0 50px rgba(168,255,99,.08);
+
   }
 
   50% {
 
     box-shadow:
-      0 0 0 24px rgba(165,255,98,0),
-      0 0 60px rgba(165,255,98,.13);
+      0 0 0 25px rgba(168,255,99,0),
+      0 0 65px rgba(168,255,99,.14);
+
   }
+
 }
 
-@keyframes scanPulse {
 
-  0%,100% {
+@keyframes sheetUp {
 
-    opacity: .45;
+  from {
+    transform:
+      translateY(100%);
   }
 
-  50% {
-
-    opacity: 1;
+  to {
+    transform:
+      translateY(0);
   }
+
 }
 
-@keyframes searchPulse {
-
-  0%,100% {
-
-    transform: scale(1);
-
-    box-shadow:
-      0 0 0 0 rgba(165,255,98,.08);
-  }
-
-  50% {
-
-    transform: scale(1.04);
-
-    box-shadow:
-      0 0 0 20px rgba(165,255,98,0);
-  }
-}
 
 @keyframes fadeUp {
 
   from {
 
-    opacity: 0;
+    opacity:
+      0;
 
-    transform: translateY(8px);
+    transform:
+      translateY(7px);
+
   }
 
   to {
 
-    opacity: 1;
+    opacity:
+      1;
 
-    transform: translateY(0);
-  }
-}
+    transform:
+      translateY(0);
 
-@keyframes sheetUp {
-
-  from {
-
-    transform: translateY(100%);
   }
 
-  to {
-
-    transform: translateY(0);
-  }
 }
 
 
 /* =========================================================
    DESKTOP
-   ========================================================= */
+========================================================= */
 
-@media (min-width: 800px) {
+@media (min-width:800px) {
 
   body {
 
-    padding: 30px 0;
+    padding:
+      25px 0;
   }
 
-  .app-shell {
+  .app {
 
     border:
       1px solid var(--line);
 
-    border-radius: 34px;
+    border-radius:
+      34px;
 
-    background: #080b0f;
+    background:
+      #080b0f;
 
-    box-shadow: 0 40px 100px rgba(0,0,0,.45);
+    box-shadow:
+      0 40px 110px rgba(0,0,0,.5);
   }
 
-  .topbar {
-
-    position: relative;
-  }
-
-  .bottom-nav {
-
-    position: fixed;
-  }
 }
 
 </style>
+
 </head>
 
 
 <body>
 
-<div class="app-shell">
+
+<!-- =======================================================
+     APPLICATION
+======================================================= -->
+
+<div class="app">
 
 
 <!-- =======================================================
      HEADER
 ======================================================= -->
 
-<header class="topbar">
+<header class="header">
 
   <div class="brand">
 
@@ -1849,9 +2977,13 @@ input:focus-visible {
 
   <div class="system-status">
 
-    <span class="status-light"></span>
+    <span
+      class="status-dot"
+      id="statusDot">
+    </span>
 
-    <span id="systemStatus">
+    <span
+      id="systemStatus">
       READY
     </span>
 
@@ -1866,11 +2998,11 @@ input:focus-visible {
 
 <section class="hero">
 
-  <div class="hero-kicker">
+  <div class="kicker">
     Independent living
   </div>
 
-  <h1 class="hero-title">
+  <h1>
 
     Ask. See.<br>
 
@@ -1878,12 +3010,12 @@ input:focus-visible {
 
   </h1>
 
-  <p class="hero-description">
+  <p>
 
-    ECHO is a voice-first companion designed to help
-    elderly and visually impaired people understand
-    their surroundings, remember important things,
-    and interact with the world more independently.
+    ECHO is a voice-first AI companion designed
+    to help elderly and visually impaired people
+    understand their surroundings, remember important
+    things, read information and move more independently.
 
   </p>
 
@@ -1891,39 +3023,47 @@ input:focus-visible {
 
 
 <!-- =======================================================
-     CAMERA
+     LIVE CAMERA
 ======================================================= -->
 
-<section class="camera-section">
+<section class="camera-card">
 
-  <div class="camera-container">
+
+  <div class="camera">
+
 
     <video
-      id="cameraVideo"
-      class="camera-video"
+      id="video"
       autoplay
       playsinline
       muted>
     </video>
 
 
+    <canvas
+      id="overlay">
+    </canvas>
+
+
     <div
-      class="camera-placeholder"
-      id="cameraPlaceholder">
+      class="camera-empty"
+      id="cameraEmpty">
 
-      <div class="camera-placeholder-inner">
+      <div>
 
-        <div class="camera-placeholder-icon">
+        <div class="camera-empty-icon">
           ◉
         </div>
 
-        <h3>
+        <h2>
           ECHO Vision
-        </h3>
+        </h2>
 
         <p>
-          Start the camera to let ECHO understand
-          the environment around you.
+
+          Start the camera and ECHO will
+          analyze the live scene.
+
         </p>
 
       </div>
@@ -1931,98 +3071,134 @@ input:focus-visible {
     </div>
 
 
-    <div class="camera-label">
-      ECHO VISION
+    <div class="camera-tag">
+      LIVE VISION
     </div>
 
 
     <div
-      class="camera-live-dot"
+      class="camera-live"
       id="cameraLive">
+
       LIVE
+
     </div>
 
 
     <div
-      class="scan-frame"
-      id="scanFrame">
-
-      <div class="scan-line"></div>
+      class="scan-corners"
+      id="scanCorners">
 
     </div>
+
 
   </div>
 
 
   <div class="camera-actions">
 
+
     <button
-      class="action-button secondary"
-      id="cameraToggle"
+      class="btn"
+      id="cameraButton"
       onclick="toggleCamera()">
 
-      START CAMERA
+      START
 
     </button>
 
 
     <button
-      class="action-button primary"
-      onclick="analyzeCurrentView()">
+      class="btn primary"
+      onclick="analyzeScene()">
 
-      ANALYZE
+      SEE
 
     </button>
 
 
     <button
-      class="action-button secondary"
+      class="btn"
+      onclick="readCamera()">
+
+      READ
+
+    </button>
+
+
+    <button
+      class="btn"
       onclick="captureFrame()">
 
       CAPTURE
 
     </button>
 
+
+  </div>
+
+
+  <div class="detection-status">
+
+    <span
+      class="detection-spinner"
+      id="detectionSpinner">
+    </span>
+
+    <span id="detectionStatus">
+
+      Camera idle
+
+    </span>
+
   </div>
 
 
   <div
-    class="response-card"
-    id="visionResponse">
+    class="result"
+    id="visionResult">
 
-    <div class="response-label">
-      ECHO VISION
+    <div class="result-label">
+      LIVE VISION
     </div>
+
+    <h3 id="visionTitle">
+      Nothing analyzed yet
+    </h3>
+
+    <p id="visionDescription">
+      Start the camera and press SEE.
+    </p>
 
     <div
-      class="response-text"
-      id="visionResponseText">
-
-      I can see your surroundings.
-
+      class="result-tags"
+      id="visionTags">
     </div>
+
 
     <div class="response-actions">
 
       <button
-        class="small-button"
-        onclick="speakCurrentResponse()">
+        class="mini-btn"
+        onclick="speakVisionResult()">
 
-        🔊 Speak
+        🔊 SPEAK
 
       </button>
 
-      <button
-        class="small-button"
-        onclick="rememberCurrentScene()">
 
-        🧠 Remember
+      <button
+        class="mini-btn"
+        onclick="rememberScene()">
+
+        🧠 REMEMBER
 
       </button>
 
     </div>
 
   </div>
+
 
 </section>
 
@@ -2031,11 +3207,12 @@ input:focus-visible {
      VOICE
 ======================================================= -->
 
-<section class="voice-panel">
+<section class="voice-card">
+
 
   <div
-    class="voice-state"
-    id="voiceState">
+    class="voice-status"
+    id="voiceStatus">
 
     ECHO is ready to listen
 
@@ -2045,12 +3222,9 @@ input:focus-visible {
   <button
     class="voice-button"
     id="voiceButton"
-    onclick="startVoice()"
-    aria-label="Talk to ECHO">
+    onclick="toggleVoice()">
 
-    <span class="mic-symbol">
-      🎙️
-    </span>
+    🎙️
 
   </button>
 
@@ -2064,7 +3238,7 @@ input:focus-visible {
   </div>
 
 
-  <div class="voice-hint">
+  <div class="voice-help">
 
     Tap once and speak naturally
 
@@ -2072,11 +3246,11 @@ input:focus-visible {
 
 
   <div
-    class="response-card"
+    class="response"
     id="voiceResponse">
 
     <div class="response-label">
-      ECHO RESPONSE
+      ECHO
     </div>
 
     <div
@@ -2084,13 +3258,14 @@ input:focus-visible {
       id="voiceResponseText">
     </div>
 
+
     <div class="response-actions">
 
       <button
-        class="small-button"
-        onclick="speakVoiceResponse()">
+        class="mini-btn"
+        onclick="repeatResponse()">
 
-        🔊 Speak again
+        🔊 SPEAK AGAIN
 
       </button>
 
@@ -2098,23 +3273,25 @@ input:focus-visible {
 
   </div>
 
+
 </section>
 
 
 <!-- =======================================================
-     QUICK ACTIONS
+     FEATURES
 ======================================================= -->
 
 <section class="section">
 
-  <div class="section-heading">
+
+  <div class="section-header">
 
     <strong>
-      What can ECHO help with?
+      ECHO capabilities
     </strong>
 
     <span>
-      Voice-first
+      LIVE
     </span>
 
   </div>
@@ -2124,8 +3301,8 @@ input:focus-visible {
 
 
     <button
-      class="feature-card"
-      onclick="openSeeMode()">
+      class="feature"
+      onclick="openVisionSheet()">
 
       <div class="feature-icon">
         👁️
@@ -2136,15 +3313,15 @@ input:focus-visible {
       </strong>
 
       <small>
-        Understand objects and surroundings.
+        Detect objects from the live camera.
       </small>
 
     </button>
 
 
     <button
-      class="feature-card"
-      onclick="openMemoryMode()">
+      class="feature"
+      onclick="openMemorySheet()">
 
       <div class="feature-icon">
         🧠
@@ -2155,15 +3332,15 @@ input:focus-visible {
       </strong>
 
       <small>
-        Remember where important things were seen.
+        Remember real observations from your camera.
       </small>
 
     </button>
 
 
     <button
-      class="feature-card"
-      onclick="openReadMode()">
+      class="feature"
+      onclick="openReadSheet()">
 
       <div class="feature-icon">
         📖
@@ -2174,18 +3351,37 @@ input:focus-visible {
       </strong>
 
       <small>
-        Read visible information aloud.
+        Extract real text from the camera.
       </small>
 
     </button>
 
 
     <button
-      class="feature-card"
-      onclick="openGuideMode()">
+      class="feature"
+      onclick="openLocationSheet()">
 
       <div class="feature-icon">
         📍
+      </div>
+
+      <strong>
+        Where am I?
+      </strong>
+
+      <small>
+        Use live GPS and location information.
+      </small>
+
+    </button>
+
+
+    <button
+      class="feature"
+      onclick="openGuideSheet()">
+
+      <div class="feature-icon">
+        🧭
       </div>
 
       <strong>
@@ -2193,7 +3389,26 @@ input:focus-visible {
       </strong>
 
       <small>
-        Receive simple voice directions.
+        Generate a live route to a destination.
+      </small>
+
+    </button>
+
+
+    <button
+      class="feature"
+      onclick="identifyPlace()">
+
+      <div class="feature-icon">
+        🏫
+      </div>
+
+      <strong>
+        Identify Place
+      </strong>
+
+      <small>
+        Read signs and search the location context.
       </small>
 
     </button>
@@ -2210,67 +3425,58 @@ input:focus-visible {
 
 <section class="section">
 
-  <div class="section-heading">
+
+  <div class="section-header">
 
     <strong>
-      Visual Memory
+      Your visual memory
     </strong>
 
     <span id="memoryCount">
-      1 remembered
+      0 saved
     </span>
 
   </div>
 
 
-  <div class="memory-card">
+  <div
+    class="memory-preview"
+    id="memoryPreview">
 
-    <div
-      class="memory-item"
-      id="memoryPreview">
+    <div class="memory-empty">
 
-      <div class="memory-thumb">
-        👓
-      </div>
-
-      <div class="memory-content">
-
-        <strong>
-          My glasses
-        </strong>
-
-        <p>
-          Last seen on the desk · 6:42 PM
-        </p>
-
-      </div>
-
-      <div class="memory-status">
-        REMEMBERED
-      </div>
+      ECHO hasn't remembered anything yet.
+      <br>
+      Capture something and say
+      <strong>“Remember this.”</strong>
 
     </div>
 
   </div>
 
+
 </section>
 
 
 <!-- =======================================================
-     FOOTER
+     ACCESSIBILITY
 ======================================================= -->
 
-<footer
-  style="
-    text-align:center;
-    color:#505a66;
-    font-size:8px;
-    margin-top:30px;
-  ">
+<div class="accessibility-card">
 
-  ECHO · AI COMPANION FOR INDEPENDENT LIVING
+  <div class="accessibility-icon">
+    ♿
+  </div>
 
-</footer>
+  <p>
+
+    ECHO is designed around voice-first interaction,
+    large controls, spoken feedback and minimal
+    dependence on complex visual interfaces.
+
+  </p>
+
+</div>
 
 
 </div>
@@ -2282,8 +3488,9 @@ input:focus-visible {
 
 <nav class="bottom-nav">
 
+
   <button
-    class="nav-button active"
+    class="nav active"
     onclick="goHome(this)">
 
     ◉
@@ -2296,8 +3503,8 @@ input:focus-visible {
 
 
   <button
-    class="nav-button"
-    onclick="openMemoryMode();setNav(this)">
+    class="nav"
+    onclick="openMemorySheet();setActiveNav(this)">
 
     🧠
 
@@ -2309,8 +3516,8 @@ input:focus-visible {
 
 
   <button
-    class="nav-button"
-    onclick="openHistoryMode();setNav(this)">
+    class="nav"
+    onclick="openHistorySheet();setActiveNav(this)">
 
     💬
 
@@ -2322,10 +3529,10 @@ input:focus-visible {
 
 
   <button
-    class="nav-button"
-    onclick="openGuideMode();setNav(this)">
+    class="nav"
+    onclick="openGuideSheet();setActiveNav(this)">
 
-    📍
+    🧭
 
     <span>
       GUIDE
@@ -2333,20 +3540,22 @@ input:focus-visible {
 
   </button>
 
+
 </nav>
 
 
 <!-- =======================================================
-     SEE SHEET
+     VISION SHEET
 ======================================================= -->
 
 <div
   class="sheet-backdrop"
-  id="seeSheet">
+  id="visionSheet">
 
   <div class="sheet">
 
     <div class="sheet-handle"></div>
+
 
     <div class="sheet-header">
 
@@ -2355,8 +3564,8 @@ input:focus-visible {
       </h2>
 
       <button
-        class="close-button"
-        onclick="closeSheet('seeSheet')">
+        class="close"
+        onclick="closeSheet('visionSheet')">
 
         ×
 
@@ -2367,41 +3576,41 @@ input:focus-visible {
 
     <p class="sheet-description">
 
-      Point the camera at something and ask ECHO
-      what you want to know.
+      ECHO uses live camera input to identify
+      common objects in your surroundings.
 
     </p>
 
 
     <button
-      class="big-option"
-      onclick="activateCameraFromSheet()">
+      class="sheet-button"
+      onclick="activateVision()">
 
       <strong>
-        👁️ Start looking
+        📷 Start live vision
       </strong>
 
       <p>
-        Use the live camera to understand the
-        environment.
+        Open the camera and analyze the current scene.
       </p>
 
     </button>
 
 
     <button
-      class="big-option"
-      onclick="demoSee()">
+      class="sheet-button"
+      onclick="closeSheet('visionSheet');analyzeScene()">
 
       <strong>
-        🔎 Understand the current scene
+        👁️ Analyze current view
       </strong>
 
       <p>
-        ECHO analyses the current camera view.
+        Run the live object detector on the camera.
       </p>
 
     </button>
+
 
   </div>
 
@@ -2420,6 +3629,7 @@ input:focus-visible {
 
     <div class="sheet-handle"></div>
 
+
     <div class="sheet-header">
 
       <h2>
@@ -2427,7 +3637,7 @@ input:focus-visible {
       </h2>
 
       <button
-        class="close-button"
+        class="close"
         onclick="closeSheet('memorySheet')">
 
         ×
@@ -2439,94 +3649,16 @@ input:focus-visible {
 
     <p class="sheet-description">
 
-      ECHO remembers useful visual observations
-      so you can ask about them later.
+      These memories are stored locally in this browser.
+      Capture something real and ask ECHO to remember it.
 
     </p>
 
 
-    <div id="memoryList"></div>
-
-
-    <button
-      class="action-button primary"
-      style="width:100%;margin-top:8px;"
-      onclick="findGlasses()">
-
-      🔎 FIND MY GLASSES
-
-    </button>
-
-  </div>
-
-</div>
-
-
-<!-- =======================================================
-     FIND SHEET
-======================================================= -->
-
-<div
-  class="sheet-backdrop"
-  id="findSheet">
-
-  <div class="sheet">
-
-    <div class="sheet-handle"></div>
-
-    <div class="sheet-header">
-
-      <h2>
-        Find My Glasses
-      </h2>
-
-      <button
-        class="close-button"
-        onclick="closeSheet('findSheet')">
-
-        ×
-
-      </button>
+    <div id="memoryList">
 
     </div>
 
-
-    <div class="find-visual">
-
-      <div class="find-object">
-        👓
-      </div>
-
-    </div>
-
-
-    <div class="find-status">
-      Searching your visual memory…
-    </div>
-
-
-    <div class="find-direction">
-
-      <strong>
-        FOUND
-      </strong>
-
-      <p>
-        Your glasses were last seen on the desk
-        beside the laptop.
-      </p>
-
-    </div>
-
-
-    <button
-      class="action-button primary"
-      style="width:100%;margin-top:12px;"
-      onclick="startLiveFind()">
-
-      📷 LOOK FOR THEM NOW
-
-    </button>
 
   </div>
 
@@ -2545,6 +3677,7 @@ input:focus-visible {
 
     <div class="sheet-handle"></div>
 
+
     <div class="sheet-header">
 
       <h2>
@@ -2552,7 +3685,7 @@ input:focus-visible {
       </h2>
 
       <button
-        class="close-button"
+        class="close"
         onclick="closeSheet('readSheet')">
 
         ×
@@ -2564,48 +3697,126 @@ input:focus-visible {
 
     <p class="sheet-description">
 
-      Point ECHO at a sign, notice, label,
-      document or menu.
+      Point the camera at a notice, book, label,
+      menu or sign. ECHO will extract the actual
+      text from the image.
 
     </p>
 
 
-    <div class="read-preview">
+    <div class="ocr-preview">
 
-      <div class="document">
+      <div
+        class="document-demo"
+        id="documentDemo">
 
-        <div class="title"></div>
+        <div class="doc-title"></div>
 
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line" style="width:80%;"></div>
-        <div class="line" style="width:62%;"></div>
-        <div class="line" style="width:90%;"></div>
+        <div class="doc-line"></div>
+
+        <div class="doc-line"></div>
+
+        <div
+          class="doc-line"
+          style="width:75%;">
+        </div>
+
+        <div
+          class="doc-line"
+          style="width:88%;">
+        </div>
+
+        <div
+          class="doc-line"
+          style="width:58%;">
+        </div>
 
       </div>
+
+
+      <img
+        class="ocr-image"
+        id="ocrImage"
+        alt="Captured text"
+      >
+
+    </div>
+
+
+    <div class="ocr-controls">
+
+
+      <button
+        class="btn primary"
+        onclick="readCamera()">
+
+        📖 READ CAMERA
+
+      </button>
+
+
+      <button
+        class="btn"
+        onclick="captureFrame();readCamera()">
+
+        📸 CAPTURE + READ
+
+      </button>
+
 
     </div>
 
 
     <div
-      style="
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:8px;
-        margin-top:10px;
-      ">
+      class="language-row">
+
+      <select
+        class="language-select"
+        id="targetLanguage">
+
+        <option value="ta">
+          Tamil
+        </option>
+
+        <option value="hi">
+          Hindi
+        </option>
+
+        <option value="te">
+          Telugu
+        </option>
+
+        <option value="ml">
+          Malayalam
+        </option>
+
+        <option value="kn">
+          Kannada
+        </option>
+
+        <option value="fr">
+          French
+        </option>
+
+        <option value="de">
+          German
+        </option>
+
+        <option value="es">
+          Spanish
+        </option>
+
+      </select>
+
+
+      <div class="language-arrow">
+        →
+      </div>
+
 
       <button
-        class="action-button primary"
-        onclick="readDemo()">
-
-        🔊 READ ALOUD
-
-      </button>
-
-      <button
-        class="action-button secondary"
-        onclick="translateDemo()">
+        class="btn primary"
+        onclick="translateOCR()">
 
         🌐 TRANSLATE
 
@@ -2615,22 +3826,94 @@ input:focus-visible {
 
 
     <div
-      class="read-result"
-      id="readResult">
+      class="ocr-result"
+      id="ocrResult">
 
-      <div class="read-result-label">
-        ECHO TEXT
+      <div class="ocr-label">
+        LIVE OCR
       </div>
 
-      <h3 id="readResultTitle">
-        Laboratory Block
-      </h3>
+      <div
+        class="ocr-result-text"
+        id="ocrText">
 
-      <p id="readResultText">
-        The visible sign says Laboratory Block.
-      </p>
+      </div>
 
     </div>
+
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     LOCATION SHEET
+======================================================= -->
+
+<div
+  class="sheet-backdrop"
+  id="locationSheet">
+
+  <div class="sheet">
+
+    <div class="sheet-handle"></div>
+
+
+    <div class="sheet-header">
+
+      <h2>
+        Where am I?
+      </h2>
+
+      <button
+        class="close"
+        onclick="closeSheet('locationSheet')">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+    <p class="sheet-description">
+
+      ECHO can request your current GPS position
+      and turn it into a human-readable location.
+
+    </p>
+
+
+    <div
+      class="location-card"
+      id="locationCard">
+
+      <div class="location-big">
+        Location not requested
+      </div>
+
+      <div class="location-small">
+        Tap the button below to request your live position.
+      </div>
+
+    </div>
+
+
+    <button
+      class="sheet-button primary"
+      onclick="locateMe()">
+
+      <strong>
+        📍 USE MY CURRENT LOCATION
+      </strong>
+
+      <p>
+        Your browser will ask for permission.
+      </p>
+
+    </button>
+
 
   </div>
 
@@ -2649,14 +3932,15 @@ input:focus-visible {
 
     <div class="sheet-handle"></div>
 
+
     <div class="sheet-header">
 
       <h2>
-        Voice Guide
+        Guide Me
       </h2>
 
       <button
-        class="close-button"
+        class="close"
         onclick="closeSheet('guideSheet')">
 
         ×
@@ -2668,50 +3952,52 @@ input:focus-visible {
 
     <p class="sheet-description">
 
-      ECHO can provide simple spoken directions
-      without requiring constant interaction with
-      a map interface.
+      Enter a destination. ECHO will use your live
+      GPS position and request a walking route.
 
     </p>
 
 
-    <div class="map">
-
-      <div class="route"></div>
-
-      <div class="map-start">
-        📍
-      </div>
-
-      <div class="map-end">
-        🏫
-      </div>
-
-    </div>
-
-
-    <div class="guide-info">
-
-      <strong>
-        Destination: Library
-      </strong>
-
-      <p>
-        Approximately 240 metres away.
-        ECHO will provide simple voice instructions.
-      </p>
-
-    </div>
+    <input
+      id="destinationInput"
+      class="destination-input"
+      type="text"
+      placeholder="e.g. Bannari Amman Institute of Technology"
+    >
 
 
     <button
-      class="action-button primary"
-      style="width:100%;margin-top:10px;"
-      onclick="startGuidance()">
+      class="route-button"
+      onclick="buildRoute()">
 
-      🔊 START VOICE GUIDANCE
+      🧭 CREATE LIVE ROUTE
 
     </button>
+
+
+    <div
+      id="map">
+    </div>
+
+
+    <div
+      class="route-info"
+      id="routeInfo">
+
+      <strong id="routeSummary">
+      </strong>
+
+      <p id="routeDescription">
+      </p>
+
+
+      <div
+        class="turn-list"
+        id="turnList">
+      </div>
+
+    </div>
+
 
   </div>
 
@@ -2730,14 +4016,15 @@ input:focus-visible {
 
     <div class="sheet-handle"></div>
 
+
     <div class="sheet-header">
 
       <h2>
-        Conversation
+        ECHO History
       </h2>
 
       <button
-        class="close-button"
+        class="close"
         onclick="closeSheet('historySheet')">
 
         ×
@@ -2747,7 +4034,40 @@ input:focus-visible {
     </div>
 
 
-    <div id="historyList"></div>
+    <div id="historyList">
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     LOADING
+======================================================= -->
+
+<div
+  class="loading-overlay"
+  id="loadingOverlay">
+
+  <div class="loading-card">
+
+    <div class="loader"></div>
+
+    <h3
+      id="loadingTitle">
+
+      Processing…
+
+    </h3>
+
+    <p
+      id="loadingText">
+
+      ECHO is working with the live input.
+
+    </p>
 
   </div>
 
@@ -2761,60 +4081,105 @@ input:focus-visible {
 <div
   class="toast"
   id="toast">
-
 </div>
 
-
-<!-- =======================================================
-     JAVASCRIPT
-======================================================= -->
 
 <script>
 
 /* =========================================================
-   GLOBAL STATE
+   ECHO STATE
 ========================================================= */
 
 let cameraStream = null;
+
+let detector = null;
+
+let detectorLoading = false;
+
+let detectionTimer = null;
 
 let recognition = null;
 
 let listening = false;
 
-let lastResponse = "";
+let currentDetections = [];
 
-let capturedImage = null;
+let lastCapturedData = null;
 
-let memories = JSON.parse(
-  localStorage.getItem("echoMemories") || "null"
-) || [
+let lastOCRText = "";
 
-  {
-    id: "default-glasses",
-    name: "My glasses",
-    icon: "👓",
-    location: "Desk beside laptop",
-    time: "6:42 PM",
-    description:
-      "Dark-frame glasses placed beside a laptop.",
-    created:
-      new Date().toISOString()
-  }
+let lastVisionText = "";
 
-];
+let currentLocation = null;
 
-let history = JSON.parse(
-  localStorage.getItem("echoHistory") || "[]"
-);
+let map = null;
+
+let routeLayer = null;
+
+let tesseractWorker = null;
+
+let tesseractLoading = false;
+
+
+let memories =
+  JSON.parse(
+    localStorage.getItem(
+      "echo_memories"
+    ) || "[]"
+  );
+
+
+let history =
+  JSON.parse(
+    localStorage.getItem(
+      "echo_history"
+    ) || "[]"
+  );
 
 
 /* =========================================================
-   DOM HELPERS
+   DOM
 ========================================================= */
 
-function $(id) {
+const $ = id =>
+  document.getElementById(id);
 
-  return document.getElementById(id);
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function setStatus(
+  text,
+  mode = "ready"
+) {
+
+  $("systemStatus").textContent =
+    text;
+
+  const dot =
+    $("statusDot");
+
+  dot.classList.remove(
+    "busy",
+    "error"
+  );
+
+  if(mode === "busy") {
+
+    dot.classList.add(
+      "busy"
+    );
+
+  }
+
+  if(mode === "error") {
+
+    dot.classList.add(
+      "error"
+    );
+
+  }
 
 }
 
@@ -2823,22 +4188,72 @@ function $(id) {
    TOAST
 ========================================================= */
 
-function showToast(message) {
+function toast(message) {
 
-  const toast = $("toast");
+  const element =
+    $("toast");
 
-  toast.textContent = message;
+  element.textContent =
+    message;
 
-  toast.classList.add("show");
+  element.classList.add(
+    "show"
+  );
 
-  clearTimeout(window.echoToastTimer);
+  clearTimeout(
+    window.echoToast
+  );
 
-  window.echoToastTimer =
-    setTimeout(() => {
+  window.echoToast =
+    setTimeout(
+      () => {
 
-      toast.classList.remove("show");
+        element.classList.remove(
+          "show"
+        );
 
-    }, 2800);
+      },
+      2800
+    );
+
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+function loading(
+  show,
+  title = "",
+  text = ""
+) {
+
+  if(show) {
+
+    $("loadingTitle")
+      .textContent =
+      title;
+
+    $("loadingText")
+      .textContent =
+      text;
+
+    $("loadingOverlay")
+      .classList.add(
+        "show"
+      );
+
+  }
+
+  else {
+
+    $("loadingOverlay")
+      .classList.remove(
+        "show"
+      );
+
+  }
 
 }
 
@@ -2849,35 +4264,48 @@ function showToast(message) {
 
 function openSheet(id) {
 
-  $(id).classList.add("open");
+  $(id)
+    .classList
+    .add("open");
 
 }
 
+
 function closeSheet(id) {
 
-  $(id).classList.remove("open");
+  $(id)
+    .classList
+    .remove("open");
 
 }
 
 
 document
-  .querySelectorAll(".sheet-backdrop")
-  .forEach(sheet => {
+  .querySelectorAll(
+    ".sheet-backdrop"
+  )
+  .forEach(
+    sheet => {
 
-    sheet.addEventListener(
-      "click",
-      event => {
+      sheet.addEventListener(
+        "click",
+        event => {
 
-        if(event.target === sheet) {
+          if(
+            event.target === sheet
+          ) {
 
-          sheet.classList.remove("open");
+            sheet
+              .classList
+              .remove("open");
+
+          }
 
         }
+      );
 
-      }
-    );
-
-  });
+    }
+  );
 
 
 /* =========================================================
@@ -2894,67 +4322,129 @@ async function toggleCamera() {
 
   }
 
+
+  if(
+    !navigator.mediaDevices ||
+    !navigator.mediaDevices.getUserMedia
+  ) {
+
+    toast(
+      "This browser does not support camera access."
+    );
+
+    return;
+
+  }
+
+
   try {
 
+    setStatus(
+      "STARTING CAMERA",
+      "busy"
+    );
+
+
     cameraStream =
-      await navigator.mediaDevices.getUserMedia({
+      await navigator
+        .mediaDevices
+        .getUserMedia({
 
-        video: {
+          video: {
 
-          facingMode: {
-            ideal: "environment"
+            facingMode: {
+              ideal: "environment"
+            },
+
+            width: {
+              ideal: 1280
+            },
+
+            height: {
+              ideal: 720
+            }
+
           },
 
-          width: {
-            ideal: 1280
-          },
+          audio:
+            false
 
-          height: {
-            ideal: 720
-          }
-
-        },
-
-        audio: false
-
-      });
+        });
 
 
-    const video = $("cameraVideo");
+    const video =
+      $("video");
 
-    video.srcObject = cameraStream;
 
-    video.style.display = "block";
+    video.srcObject =
+      cameraStream;
 
-    $("cameraPlaceholder").style.display =
+
+    await video.play();
+
+
+    $("cameraEmpty")
+      .style
+      .display =
       "none";
 
+
+    video.style.display =
+      "block";
+
+
     $("cameraLive")
-      .classList.add("visible");
+      .classList
+      .add("show");
 
-    $("scanFrame")
-      .classList.add("visible");
 
-    $("cameraToggle")
-      .textContent = "STOP CAMERA";
+    $("scanCorners")
+      .classList
+      .add("show");
 
-    $("systemStatus")
-      .textContent = "CAMERA READY";
 
-    showToast("Camera is ready.");
+    $("cameraButton")
+      .textContent =
+      "STOP";
 
-    speak(
-      "Camera is ready. Point ECHO at something you want me to understand."
+
+    setStatus(
+      "CAMERA READY"
     );
+
+
+    $("detectionStatus")
+      .textContent =
+      "Live camera ready";
+
+
+    resizeOverlay();
+
+
+    toast(
+      "Camera is live."
+    );
+
 
   }
 
   catch(error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
-    showToast(
-      "Camera access was blocked. Allow camera access in your browser settings."
+    cameraStream =
+      null;
+
+    setStatus(
+      "CAMERA ERROR",
+      "error"
+    );
+
+
+    toast(
+      "Camera permission was not granted."
     );
 
   }
@@ -2964,76 +4454,162 @@ async function toggleCamera() {
 
 function stopCamera() {
 
+  stopLiveDetection();
+
+
   if(cameraStream) {
 
     cameraStream
       .getTracks()
-      .forEach(track => track.stop());
+      .forEach(
+        track =>
+          track.stop()
+      );
 
   }
 
-  cameraStream = null;
 
-  const video = $("cameraVideo");
+  cameraStream =
+    null;
 
-  video.srcObject = null;
 
-  video.style.display = "none";
+  $("video")
+    .srcObject =
+    null;
 
-  $("cameraPlaceholder").style.display =
+
+  $("video")
+    .style
+    .display =
+    "none";
+
+
+  $("cameraEmpty")
+    .style
+    .display =
     "flex";
 
+
   $("cameraLive")
-    .classList.remove("visible");
+    .classList
+    .remove(
+      "show"
+    );
 
-  $("scanFrame")
-    .classList.remove("visible");
 
-  $("cameraToggle")
-    .textContent = "START CAMERA";
+  $("scanCorners")
+    .classList
+    .remove(
+      "show"
+    );
 
-  $("systemStatus")
-    .textContent = "READY";
+
+  $("cameraButton")
+    .textContent =
+    "START";
+
+
+  clearOverlay();
+
+
+  setStatus(
+    "READY"
+  );
+
+
+  $("detectionStatus")
+    .textContent =
+    "Camera idle";
 
 }
 
 
-function captureFrame() {
+function resizeOverlay() {
 
-  const video = $("cameraVideo");
+  const video =
+    $("video");
 
-  if(!cameraStream) {
+  const canvas =
+    $("overlay");
 
-    showToast(
-      "Start the camera first."
-    );
+
+  if(
+    !video.videoWidth
+  ) {
 
     return;
 
   }
 
-  if(video.readyState < 2) {
 
-    showToast(
-      "Camera is still starting."
+  canvas.width =
+    video.videoWidth;
+
+  canvas.height =
+    video.videoHeight;
+
+}
+
+
+window.addEventListener(
+  "resize",
+  resizeOverlay
+);
+
+
+/* =========================================================
+   CAPTURE REAL FRAME
+========================================================= */
+
+function captureFrame() {
+
+  if(!cameraStream) {
+
+    toast(
+      "Start the camera first."
     );
 
-    return;
+    return null;
+
+  }
+
+
+  const video =
+    $("video");
+
+
+  if(
+    video.readyState < 2
+  ) {
+
+    toast(
+      "Camera is not ready yet."
+    );
+
+    return null;
 
   }
 
 
   const canvas =
-    document.createElement("canvas");
+    document.createElement(
+      "canvas"
+    );
+
 
   canvas.width =
-    video.videoWidth || 1280;
+    video.videoWidth;
+
 
   canvas.height =
-    video.videoHeight || 720;
+    video.videoHeight;
+
 
   const context =
-    canvas.getContext("2d");
+    canvas.getContext(
+      "2d"
+    );
+
 
   context.drawImage(
     video,
@@ -3044,30 +4620,162 @@ function captureFrame() {
   );
 
 
-  capturedImage =
+  lastCapturedData =
     canvas.toDataURL(
       "image/jpeg",
-      .72
+      .85
     );
 
 
-  showToast(
-    "Frame captured."
+  toast(
+    "Live frame captured."
   );
 
-  speak(
-    "I've captured the current view."
-  );
+
+  return lastCapturedData;
 
 }
 
 
-function analyzeCurrentView() {
+/* =========================================================
+   TENSORFLOW OBJECT DETECTION
+========================================================= */
+
+async function loadDetector() {
+
+  if(detector) {
+
+    return detector;
+
+  }
+
+
+  if(detectorLoading) {
+
+    while(
+      detectorLoading
+    ) {
+
+      await sleep(
+        200
+      );
+
+    }
+
+    return detector;
+
+  }
+
+
+  detectorLoading =
+    true;
+
+
+  try {
+
+    setStatus(
+      "LOADING VISION",
+      "busy"
+    );
+
+
+    $("detectionStatus")
+      .textContent =
+      "Loading live vision model…";
+
+
+    detector =
+      await cocoSsd.load({
+        base: "lite_mobilenet_v2"
+      });
+
+
+    setStatus(
+      "VISION READY"
+    );
+
+
+    $("detectionStatus")
+      .textContent =
+      "Live object detection ready";
+
+
+    return detector;
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    setStatus(
+      "VISION ERROR",
+      "error"
+    );
+
+
+    toast(
+      "The vision model could not load."
+    );
+
+
+    return null;
+
+  }
+
+  finally {
+
+    detectorLoading =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   ANALYZE LIVE CAMERA
+========================================================= */
+
+async function analyzeScene() {
 
   if(!cameraStream) {
 
-    showToast(
-      "Start the camera first."
+    await toggleCamera();
+
+    if(!cameraStream) {
+
+      return;
+
+    }
+
+  }
+
+
+  const model =
+    await loadDetector();
+
+
+  if(!model) {
+
+    return;
+
+  }
+
+
+  const video =
+    $("video");
+
+
+  if(
+    video.readyState < 2
+  ) {
+
+    toast(
+      "Camera is still starting."
     );
 
     return;
@@ -3075,121 +4783,1848 @@ function analyzeCurrentView() {
   }
 
 
-  const result =
-    $("visionResponse");
-
-  const text =
-    "I can see a desk area with a laptop, a pair of glasses and several personal items. This is a demonstration of ECHO's visual understanding.";
-
-  $("visionResponseText")
-    .textContent = text;
-
-  result.classList.add("visible");
-
-  lastResponse = text;
-
-  addHistory(
-    "ECHO",
-    text
+  setStatus(
+    "ANALYZING",
+    "busy"
   );
 
-  speak(text);
+
+  $("detectionSpinner")
+    .classList
+    .add("show");
+
+
+  $("detectionStatus")
+    .textContent =
+    "Analyzing the live camera…";
+
+
+  try {
+
+    const predictions =
+      await model.detect(
+        video,
+        20
+      );
+
+
+    currentDetections =
+      predictions
+        .filter(
+          item =>
+            item.score >= .45
+        );
+
+
+    drawDetections(
+      currentDetections
+    );
+
+
+    const labels =
+      uniqueLabels(
+        currentDetections
+      );
+
+
+    let title =
+      "I don't recognize a clear object yet.";
+
+
+    let description =
+      "Try moving the camera closer or improving the lighting.";
+
+
+    if(labels.length) {
+
+      title =
+        describeObjects(
+          labels
+        );
+
+
+      description =
+        "I detected these objects from your live camera view.";
+
+    }
+
+
+    $("visionTitle")
+      .textContent =
+      title;
+
+
+    $("visionDescription")
+      .textContent =
+      description;
+
+
+    renderTags(
+      labels
+    );
+
+
+    $("visionResult")
+      .classList
+      .add("show");
+
+
+    lastVisionText =
+      title +
+      " " +
+      description;
+
+
+    addHistory(
+      "ECHO",
+      lastVisionText
+    );
+
+
+    setStatus(
+      "VISION READY"
+    );
+
+
+    $("detectionStatus")
+      .textContent =
+      labels.length
+        ? labels.join(", ")
+        : "No confident object detected";
+
+
+    speak(
+      labels.length
+        ? title
+        : "I couldn't confidently identify an object in the current view."
+    );
+
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      "Live vision analysis failed."
+    );
+
+
+    setStatus(
+      "VISION ERROR",
+      "error"
+    );
+
+  }
+
+  finally {
+
+    $("detectionSpinner")
+      .classList
+      .remove("show");
+
+  }
 
 }
 
 
-function rememberCurrentScene() {
+function uniqueLabels(
+  predictions
+) {
 
-  const memory = {
+  return [
+    ...new Set(
+      predictions.map(
+        item =>
+          item.class
+      )
+    )
+  ];
 
-    id:
-      "memory-" +
-      Date.now(),
-
-    name:
-      "Captured scene",
-
-    icon:
-      "📷",
-
-    location:
-      "Current camera view",
-
-    time:
-      new Date().toLocaleTimeString(
-        [],
-        {
-          hour: "numeric",
-          minute: "2-digit"
-        }
-      ),
-
-    description:
-      "A visual observation captured by ECHO.",
-
-    created:
-      new Date().toISOString(),
-
-    image:
-      capturedImage || null
-
-  };
+}
 
 
-  memories.unshift(memory);
+function describeObjects(
+  labels
+) {
 
-  saveMemories();
+  if(labels.length === 1) {
 
-  updateMemoryPreview();
+    return:
+      "I can see a " +
+      articleFor(labels[0]) +
+      " " +
+      labels[0] +
+      ".";
 
-  showToast(
-    "Visual memory saved."
-  );
+  }
 
-  speak(
-    "I've remembered this visual scene."
+
+  if(labels.length === 2) {
+
+    return:
+      "I can see " +
+      articleFor(labels[0]) +
+      " " +
+      labels[0] +
+      " and " +
+      articleFor(labels[1]) +
+      " " +
+      labels[1] +
+      ".";
+
+  }
+
+
+  return:
+    "I can see " +
+    labels
+      .slice(0,5)
+      .map(
+        label =>
+          articleFor(label) +
+          " " +
+          label
+      )
+      .join(", ") +
+    ".";
+
+}
+
+
+function articleFor(
+  word
+) {
+
+  const first =
+    word
+      .trim()
+      .charAt(0)
+      .toLowerCase();
+
+
+  return "aeiou".includes(first)
+    ? "an"
+    : "a";
+
+}
+
+
+/* =========================================================
+   DRAW DETECTIONS
+========================================================= */
+
+function drawDetections(
+  predictions
+) {
+
+  const canvas =
+    $("overlay");
+
+
+  const context =
+    canvas.getContext(
+      "2d"
+    );
+
+
+  clearOverlay();
+
+
+  const video =
+    $("video");
+
+
+  if(
+    !video.videoWidth ||
+    !video.videoHeight
+  ) {
+
+    return;
+
+  }
+
+
+  const scaleX =
+    canvas.width /
+    video.videoWidth;
+
+
+  const scaleY =
+    canvas.height /
+    video.videoHeight;
+
+
+  predictions
+    .forEach(
+      prediction => {
+
+        const [
+          x,
+          y,
+          width,
+          height
+        ] =
+          prediction.bbox;
+
+
+        const sx =
+          x * scaleX;
+
+
+        const sy =
+          y * scaleY;
+
+
+        const sw =
+          width * scaleX;
+
+
+        const sh =
+          height * scaleY;
+
+
+        context.strokeStyle =
+          "#a8ff63";
+
+
+        context.lineWidth =
+          Math.max(
+            2,
+            canvas.width / 500
+          );
+
+
+        context.strokeRect(
+          sx,
+          sy,
+          sw,
+          sh
+        );
+
+
+        const label =
+          prediction.class +
+          " " +
+          Math.round(
+            prediction.score * 100
+          ) +
+          "%";
+
+
+        context.font =
+          "600 14px -apple-system, BlinkMacSystemFont, sans-serif";
+
+
+        const textWidth =
+          context.measureText(
+            label
+          ).width;
+
+
+        context.fillStyle =
+          "rgba(0,0,0,.75)";
+
+
+        context.fillRect(
+          sx,
+          Math.max(
+            0,
+            sy - 25
+          ),
+          textWidth + 14,
+          25
+        );
+
+
+        context.fillStyle =
+          "#a8ff63";
+
+
+        context.fillText(
+          label,
+          sx + 7,
+          Math.max(
+            17,
+            sy - 8
+          )
+        );
+
+      }
+    );
+
+}
+
+
+function clearOverlay() {
+
+  const canvas =
+    $("overlay");
+
+
+  const context =
+    canvas.getContext(
+      "2d"
+    );
+
+
+  context.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
   );
 
 }
 
 
 /* =========================================================
-   CAMERA SHEET
+   LIVE DETECTION MODE
 ========================================================= */
 
-function openSeeMode() {
+async function startLiveDetection() {
 
-  openSheet("seeSheet");
+  if(!cameraStream) {
+
+    await toggleCamera();
+
+  }
+
+
+  if(!cameraStream) {
+
+    return;
+
+  }
+
+
+  const model =
+    await loadDetector();
+
+
+  if(!model) {
+
+    return;
+
+  }
+
+
+  stopLiveDetection();
+
+
+  $("detectionStatus")
+    .textContent =
+    "Live detection running…";
+
+
+  detectionTimer =
+    setInterval(
+      async () => {
+
+        if(
+          !cameraStream ||
+          detectorLoading
+        ) {
+
+          return;
+
+        }
+
+
+        try {
+
+          const predictions =
+            await detector.detect(
+              $("video"),
+              15
+            );
+
+
+          currentDetections =
+            predictions.filter(
+              item =>
+                item.score >= .5
+            );
+
+
+          drawDetections(
+            currentDetections
+          );
+
+
+        }
+
+        catch(error) {
+
+          console.error(
+            error
+          );
+
+        }
+
+      },
+      1200
+    );
 
 }
 
-function activateCameraFromSheet() {
 
-  closeSheet("seeSheet");
+function stopLiveDetection() {
 
-  document
-    .querySelector(".camera-section")
-    .scrollIntoView({
-      behavior: "smooth"
-    });
+  if(detectionTimer) {
 
-  setTimeout(() => {
+    clearInterval(
+      detectionTimer
+    );
 
-    if(!cameraStream) {
+    detectionTimer =
+      null;
 
-      toggleCamera();
+  }
+
+}
+
+
+/* =========================================================
+   OCR
+========================================================= */
+
+async function getOCRWorker() {
+
+  if(tesseractWorker) {
+
+    return tesseractWorker;
+
+  }
+
+
+  if(tesseractLoading) {
+
+    while(
+      tesseractLoading
+    ) {
+
+      await sleep(
+        200
+      );
 
     }
 
-  }, 450);
+    return tesseractWorker;
+
+  }
+
+
+  tesseractLoading =
+    true;
+
+
+  try {
+
+    setStatus(
+      "LOADING OCR",
+      "busy"
+    );
+
+
+    tesseractWorker =
+      await Tesseract.createWorker(
+        "eng"
+      );
+
+
+    setStatus(
+      "OCR READY"
+    );
+
+
+    return tesseractWorker;
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      "OCR model could not load."
+    );
+
+
+    return null;
+
+  }
+
+  finally {
+
+    tesseractLoading =
+      false;
+
+  }
 
 }
 
-function demoSee() {
 
-  closeSheet("seeSheet");
+async function readCamera() {
 
-  analyzeCurrentView();
+  if(!cameraStream) {
+
+    await toggleCamera();
+
+  }
+
+
+  if(!cameraStream) {
+
+    return;
+
+  }
+
+
+  const image =
+    captureFrame();
+
+
+  if(!image) {
+
+    return;
+
+  }
+
+
+  openSheet(
+    "readSheet"
+  );
+
+
+  $("ocrImage")
+    .src =
+    image;
+
+
+  $("ocrImage")
+    .style
+    .display =
+    "block";
+
+
+  $("documentDemo")
+    .style
+    .display =
+    "none";
+
+
+  const worker =
+    await getOCRWorker();
+
+
+  if(!worker) {
+
+    return;
+
+  }
+
+
+  loading(
+    true,
+    "Reading the live frame",
+    "ECHO is extracting visible text…"
+  );
+
+
+  setStatus(
+    "READING",
+    "busy"
+  );
+
+
+  try {
+
+    const result =
+      await worker.recognize(
+        image
+      );
+
+
+    const text =
+      result.data.text
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+
+
+    lastOCRText =
+      text;
+
+
+    $("ocrResult")
+      .classList
+      .add("show");
+
+
+    $("ocrText")
+      .textContent =
+      text ||
+      "No clear text was detected. Try moving closer or improving the lighting.";
+
+
+    if(text) {
+
+      addHistory(
+        "ECHO",
+        "Read: " + text
+      );
+
+
+      speak(
+        text
+      );
+
+
+      toast(
+        "Live text detected."
+      );
+
+    }
+
+    else {
+
+      speak(
+        "I couldn't find clear text in the image."
+      );
+
+    }
+
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      "OCR failed on this frame."
+    );
+
+  }
+
+  finally {
+
+    loading(
+      false
+    );
+
+    setStatus(
+      "READY"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   TRANSLATION
+========================================================= */
+
+async function translateOCR() {
+
+  if(!lastOCRText) {
+
+    toast(
+      "Read some text first."
+    );
+
+    return;
+
+  }
+
+
+  const target =
+    $("targetLanguage")
+      .value;
+
+
+  loading(
+    true,
+    "Translating live text",
+    "ECHO is translating the text you just captured…"
+  );
+
+
+  try {
+
+    const url =
+      "https://api.mymemory.translated.net/get" +
+      "?q=" +
+      encodeURIComponent(
+        lastOCRText
+      ) +
+      "&langpair=auto|" +
+      encodeURIComponent(
+        target
+      );
+
+
+    const response =
+      await fetch(
+        url
+      );
+
+
+    if(!response.ok) {
+
+      throw new Error(
+        "Translation request failed"
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    const translated =
+      data
+        ?.responseData
+        ?.translatedText;
+
+
+    if(!translated) {
+
+      throw new Error(
+        "No translation returned"
+      );
+
+    }
+
+
+    $("ocrText")
+      .textContent =
+      translated;
+
+
+    addHistory(
+      "ECHO",
+      "Translation: " +
+      translated
+    );
+
+
+    speak(
+      translated
+    );
+
+
+    toast(
+      "Live translation complete."
+    );
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      "Translation service unavailable. Try again."
+    );
+
+  }
+
+  finally {
+
+    loading(
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PLACE IDENTIFICATION
+========================================================= */
+
+async function identifyPlace() {
+
+  if(!cameraStream) {
+
+    await toggleCamera();
+
+  }
+
+
+  if(!cameraStream) {
+
+    return;
+
+  }
+
+
+  const image =
+    captureFrame();
+
+
+  if(!image) {
+
+    return;
+
+  }
+
+
+  const worker =
+    await getOCRWorker();
+
+
+  if(!worker) {
+
+    return;
+
+  }
+
+
+  loading(
+    true,
+    "Identifying the place",
+    "Reading visible signs and checking location context…"
+  );
+
+
+  try {
+
+    const result =
+      await worker.recognize(
+        image
+      );
+
+
+    const text =
+      result.data.text
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+
+
+    if(!text) {
+
+      toast(
+        "I couldn't read a useful sign from the camera."
+      );
+
+
+      speak(
+        "I couldn't read a useful sign. Try pointing at a clearer sign or building name."
+      );
+
+
+      return;
+
+    }
+
+
+    /*
+      Search the extracted sign text
+      through Nominatim.
+    */
+
+    const searchUrl =
+      "https://nominatim.openstreetmap.org/search" +
+      "?format=jsonv2" +
+      "&limit=3" +
+      "&q=" +
+      encodeURIComponent(
+        text.slice(0,120)
+      );
+
+
+    const response =
+      await fetch(
+        searchUrl
+      );
+
+
+    if(!response.ok) {
+
+      throw new Error(
+        "Place lookup failed"
+      );
+
+    }
+
+
+    const places =
+      await response.json();
+
+
+    if(!places.length) {
+
+      speak(
+        "I read this from the sign: " +
+        text +
+        ". I couldn't find a matching place in the location database."
+      );
+
+
+      toast(
+        "Text found, but no matching place."
+      );
+
+
+      return;
+
+    }
+
+
+    const place =
+      places[0];
+
+
+    const responseText =
+      "I read " +
+      text +
+      ". A matching place is " +
+      place.display_name +
+      ".";
+
+
+    addHistory(
+      "ECHO",
+      responseText
+    );
+
+
+    speak(
+      responseText
+    );
+
+
+    showVoiceResponse(
+      responseText
+    );
+
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      "Place identification failed."
+    );
+
+  }
+
+  finally {
+
+    loading(
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+function locateMe() {
+
+  if(
+    !navigator.geolocation
+  ) {
+
+    toast(
+      "Geolocation is not supported."
+    );
+
+    return;
+
+  }
+
+
+  setStatus(
+    "LOCATING",
+    "busy"
+  );
+
+
+  $("locationCard")
+    .innerHTML = `
+
+      <div class="location-big">
+        Finding you…
+      </div>
+
+      <div class="location-small">
+        Waiting for the device location.
+      </div>
+
+    `;
+
+
+  navigator.geolocation.getCurrentPosition(
+
+    async position => {
+
+      currentLocation = {
+
+        lat:
+          position.coords.latitude,
+
+        lon:
+          position.coords.longitude,
+
+        accuracy:
+          position.coords.accuracy
+
+      };
+
+
+      try {
+
+        const place =
+          await reverseGeocode(
+            currentLocation.lat,
+            currentLocation.lon
+          );
+
+
+        renderLocation(
+          place
+        );
+
+
+      }
+
+      catch(error) {
+
+        renderLocation(
+          null
+        );
+
+      }
+
+
+      setStatus(
+        "LOCATION READY"
+      );
+
+    },
+
+    error => {
+
+      console.error(
+        error
+      );
+
+
+      $("locationCard")
+        .innerHTML = `
+
+          <div class="location-big">
+            Location unavailable
+          </div>
+
+          <div class="location-small">
+            Allow location access and try again.
+          </div>
+
+        `;
+
+
+      setStatus(
+        "LOCATION ERROR",
+        "error"
+      );
+
+
+      toast(
+        "Location permission was not granted."
+      );
+
+    },
+
+    {
+
+      enableHighAccuracy:
+        true,
+
+      timeout:
+        15000,
+
+      maximumAge:
+        0
+
+    }
+
+  );
+
+}
+
+
+async function reverseGeocode(
+  lat,
+  lon
+) {
+
+  const url =
+    "https://nominatim.openstreetmap.org/reverse" +
+    "?format=jsonv2" +
+    "&lat=" +
+    encodeURIComponent(lat) +
+    "&lon=" +
+    encodeURIComponent(lon) +
+    "&zoom=18" +
+    "&addressdetails=1";
+
+
+  const response =
+    await fetch(
+      url
+    );
+
+
+  if(!response.ok) {
+
+    throw new Error(
+      "Reverse geocoding failed"
+    );
+
+  }
+
+
+  return await response.json();
+
+}
+
+
+function renderLocation(
+  place
+) {
+
+  if(!currentLocation) {
+
+    return;
+
+  }
+
+
+  const address =
+    place
+      ?.display_name ||
+      "Location coordinates available";
+
+
+  $("locationCard")
+    .innerHTML = `
+
+      <div class="location-big">
+        ${escapeHtml(
+          address.split(",").slice(0,2).join(",")
+        )}
+      </div>
+
+      <div class="location-small">
+        ${escapeHtml(address)}
+      </div>
+
+      <div class="coordinate-row">
+
+        <div class="coordinate">
+          LAT<br>
+          ${currentLocation.lat.toFixed(6)}
+        </div>
+
+        <div class="coordinate">
+          LON<br>
+          ${currentLocation.lon.toFixed(6)}
+        </div>
+
+      </div>
+
+    `;
+
+
+  const spoken =
+    "You are near " +
+    address.split(",").slice(0,3).join(", ") +
+    ".";
+
+
+  speak(
+    spoken
+  );
+
+
+  addHistory(
+    "ECHO",
+    spoken
+  );
+
+}
+
+
+/* =========================================================
+   ROUTING
+========================================================= */
+
+async function buildRoute() {
+
+  const destination =
+    $("destinationInput")
+      .value
+      .trim();
+
+
+  if(!destination) {
+
+    toast(
+      "Enter a destination first."
+    );
+
+    return;
+
+  }
+
+
+  loading(
+    true,
+    "Creating your route",
+    "Getting your location and finding the destination…"
+  );
+
+
+  try {
+
+    if(!currentLocation) {
+
+      await getLocationPromise();
+
+    }
+
+
+    if(!currentLocation) {
+
+      throw new Error(
+        "Current location unavailable"
+      );
+
+    }
+
+
+    const destinationData =
+      await geocodeDestination(
+        destination
+      );
+
+
+    if(
+      !destinationData
+    ) {
+
+      throw new Error(
+        "Destination not found"
+      );
+
+    }
+
+
+    const route =
+      await requestRoute(
+        currentLocation,
+        {
+
+          lat:
+            Number(
+              destinationData.lat
+            ),
+
+          lon:
+            Number(
+              destinationData.lon
+            )
+
+        }
+      );
+
+
+    renderRoute(
+      route,
+      destinationData
+    );
+
+
+  }
+
+  catch(error) {
+
+    console.error(
+      error
+    );
+
+
+    toast(
+      error.message ||
+      "Could not create route."
+    );
+
+  }
+
+  finally {
+
+    loading(
+      false
+    );
+
+  }
+
+}
+
+
+function getLocationPromise() {
+
+  return new Promise(
+    resolve => {
+
+      if(
+        !navigator.geolocation
+      ) {
+
+        resolve(
+          null
+        );
+
+        return;
+
+      }
+
+
+      navigator.geolocation.getCurrentPosition(
+
+        position => {
+
+          currentLocation = {
+
+            lat:
+              position.coords.latitude,
+
+            lon:
+              position.coords.longitude,
+
+            accuracy:
+              position.coords.accuracy
+
+          };
+
+
+          resolve(
+            currentLocation
+          );
+
+        },
+
+        () => {
+
+          resolve(
+            null
+          );
+
+        },
+
+        {
+
+          enableHighAccuracy:
+            true,
+
+          timeout:
+            15000,
+
+          maximumAge:
+            0
+
+        }
+
+      );
+
+    }
+  );
+
+}
+
+
+async function geocodeDestination(
+  query
+) {
+
+  const url =
+    "https://nominatim.openstreetmap.org/search" +
+    "?format=jsonv2" +
+    "&limit=1" +
+    "&q=" +
+    encodeURIComponent(
+      query
+    );
+
+
+  const response =
+    await fetch(
+      url
+    );
+
+
+  if(!response.ok) {
+
+    throw new Error(
+      "Destination lookup failed."
+    );
+
+  }
+
+
+  const data =
+    await response.json();
+
+
+  if(!data.length) {
+
+    throw new Error(
+      "Destination not found."
+    );
+
+  }
+
+
+  return data[0];
+
+}
+
+
+async function requestRoute(
+  from,
+  to
+) {
+
+  /*
+    OSRM route API.
+
+    We request walking first.
+    If the public server doesn't expose
+    the walking profile, fall back to driving
+    so the map still demonstrates live routing.
+  */
+
+  const profiles =
+    [
+      "foot",
+      "driving"
+    ];
+
+
+  for(
+    const profile of profiles
+  ) {
+
+    try {
+
+      const url =
+        "https://router.project-osrm.org/route/v1/" +
+        profile +
+        "/" +
+        from.lon +
+        "," +
+        from.lat +
+        ";" +
+        to.lon +
+        "," +
+        to.lat +
+        "?overview=full" +
+        "&geometries=geojson" +
+        "&steps=true";
+
+
+      const response =
+        await fetch(
+          url
+        );
+
+
+      if(!response.ok) {
+
+        continue;
+
+      }
+
+
+      const data =
+        await response.json();
+
+
+      if(
+        data.code === "Ok" &&
+        data.routes?.length
+      ) {
+
+        return {
+
+          profile,
+          route:
+            data.routes[0]
+
+        };
+
+      }
+
+    }
+
+    catch(error) {
+
+      console.error(
+        error
+      );
+
+    }
+
+  }
+
+
+  throw new Error(
+    "No route could be calculated."
+  );
+
+}
+
+
+function renderRoute(
+  data,
+  destination
+) {
+
+  $("map")
+    .style
+    .display =
+    "block";
+
+
+  $("routeInfo")
+    .classList
+    .add("show");
+
+
+  if(!map) {
+
+    map =
+      L.map(
+        "map"
+      );
+
+
+    L.tileLayer(
+
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+      {
+
+        maxZoom:
+          19,
+
+        attribution:
+          "&copy; OpenStreetMap contributors"
+
+      }
+
+    )
+    .addTo(
+      map
+    );
+
+  }
+
+
+  if(routeLayer) {
+
+    routeLayer.remove();
+
+  }
+
+
+  const route =
+    data.route;
+
+
+  routeLayer =
+    L.geoJSON(
+      {
+
+        type:
+          "Feature",
+
+        geometry:
+          route.geometry,
+
+        properties:
+          {}
+
+      },
+
+      {
+
+        style:
+          {
+
+            color:
+              "#7dcc55",
+
+            weight:
+              6,
+
+            opacity:
+              .9
+
+          }
+
+      }
+
+    )
+    .addTo(
+      map
+    );
+
+
+  const bounds =
+    routeLayer.getBounds();
+
+
+  map.fitBounds(
+    bounds,
+    {
+      padding:
+        [25,25]
+    }
+  );
+
+
+  const distanceKm =
+    route.distance /
+    1000;
+
+
+  const minutes =
+    Math.round(
+      route.duration /
+      60
+    );
+
+
+  $("routeSummary")
+    .textContent =
+    destination.display_name
+      .split(",")
+      .slice(0,2)
+      .join(", ");
+
+
+  $("routeDescription")
+    .textContent =
+    Math.max(
+      .1,
+      distanceKm
+    ).toFixed(2) +
+    " km · approximately " +
+    minutes +
+    " minutes · " +
+    data.profile +
+    " route";
+
+
+  const steps =
+    route.legs
+      ?.flatMap(
+        leg =>
+          leg.steps || []
+      )
+      .slice(0,8) ||
+    [];
+
+
+  $("turnList")
+    .innerHTML =
+    steps.length
+      ? steps.map(
+          step => `
+
+            <div class="turn">
+
+              ${escapeHtml(
+                step.maneuver?.type ||
+                "Continue"
+              )}
+
+              ·
+
+              ${escapeHtml(
+                step.name ||
+                "Unnamed road"
+              )}
+
+            </div>
+
+          `
+        ).join("")
+      : `
+
+          <div class="turn">
+            Route calculated successfully.
+          </div>
+
+        `;
+
+
+  speak(
+
+    "Route to " +
+    destination.display_name.split(",").slice(0,2).join(", ") +
+    " is " +
+    Math.round(
+      route.distance
+    ) +
+    " metres, approximately " +
+    minutes +
+    " minutes."
+
+  );
+
+
+  addHistory(
+    "ECHO",
+    "Created a live route to " +
+    destination.display_name
+  );
 
 }
 
@@ -3198,109 +6633,174 @@ function demoSee() {
    MEMORY
 ========================================================= */
 
-function openMemoryMode() {
+function rememberScene() {
 
-  renderMemoryList();
-
-  openSheet("memorySheet");
-
-}
+  const image =
+    lastCapturedData ||
+    captureFrame();
 
 
-function saveMemories() {
+  if(!image) {
 
-  localStorage.setItem(
-    "echoMemories",
-    JSON.stringify(memories)
-  );
-
-}
-
-
-function renderMemoryList() {
-
-  const list =
-    $("memoryList");
-
-  if(memories.length === 0) {
-
-    list.innerHTML = `
-      <div class="empty-state">
-        ECHO has no remembered objects yet.
-        Ask ECHO to remember something.
-      </div>
-    `;
+    toast(
+      "Start the camera and capture something first."
+    );
 
     return;
 
   }
 
 
-  list.innerHTML =
-    memories
-      .map(memory => `
+  const labels =
+    uniqueLabels(
+      currentDetections
+    );
 
-        <div class="memory-large">
 
-          <div class="memory-large-top">
+  const memory = {
 
-            <div class="memory-large-icon">
-              ${memory.icon}
-            </div>
+    id:
+      Date.now(),
 
-            <div class="memory-large-info">
+    title:
+      labels.length
+        ? labels.slice(0,3).join(", ")
+        : "Visual scene",
 
-              <strong>
-                ${escapeHtml(memory.name)}
-              </strong>
+    icon:
+      iconForLabel(
+        labels[0]
+      ),
 
-              <p>
-                Last seen ${escapeHtml(memory.location)}
-              </p>
+    description:
+      labels.length
+        ? "Detected: " +
+          labels.join(", ")
+        : "Captured visual observation",
 
-            </div>
+    location:
+      currentLocation
+        ? currentLocation.lat.toFixed(5) +
+          ", " +
+          currentLocation.lon.toFixed(5)
+        : "Location not available",
 
-            <button
-              class="memory-delete"
-              onclick="deleteMemory('${memory.id}')">
+    time:
+      new Date().toLocaleString(),
 
-              ×
+    image
 
-            </button>
+  };
 
-          </div>
 
-          <div class="memory-large-meta">
+  memories.unshift(
+    memory
+  );
 
-            ${escapeHtml(memory.description)}
-            <br>
-            ${escapeHtml(memory.time)}
 
-          </div>
+  memories =
+    memories.slice(
+      0,
+      20
+    );
 
-        </div>
 
-      `)
-      .join("");
+  localStorage.setItem(
+    "echo_memories",
+    JSON.stringify(
+      memories
+    )
+  );
+
+
+  updateMemoryPreview();
+
+
+  toast(
+    "Real visual memory saved on this device."
+  );
+
+
+  speak(
+    "I've remembered this visual scene."
+  );
+
+
+  addHistory(
+    "ECHO",
+    "Remembered " +
+    memory.title
+  );
 
 }
 
 
-function deleteMemory(id) {
+function iconForLabel(
+  label
+) {
 
-  memories =
-    memories.filter(
-      memory => memory.id !== id
-    );
+  const icons = {
 
-  saveMemories();
+    bottle:
+      "🧴",
 
-  renderMemoryList();
+    cup:
+      "☕",
 
-  updateMemoryPreview();
+    laptop:
+      "💻",
 
-  showToast(
-    "Memory removed."
+    cell phone:
+      "📱",
+
+    book:
+      "📖",
+
+    chair:
+      "🪑",
+
+    person:
+      "👤",
+
+    backpack:
+      "🎒",
+
+    handbag:
+      "👜",
+
+    suitcase:
+      "🧳",
+
+    bicycle:
+      "🚲",
+
+    car:
+      "🚗",
+
+    dog:
+      "🐕",
+
+    cat:
+      "🐈",
+
+    keyboard:
+      "⌨️",
+
+    mouse:
+      "🖱️",
+
+    remote:
+      "🎛️",
+
+    tv:
+      "📺"
+
+  };
+
+
+  return (
+    icons[label] ||
+    "👁️"
   );
 
 }
@@ -3311,241 +6811,201 @@ function updateMemoryPreview() {
   $("memoryCount")
     .textContent =
     memories.length +
-    (memories.length === 1
-      ? " remembered"
-      : " remembered");
-
-}
-
-
-function findGlasses() {
-
-  closeSheet("memorySheet");
-
-  openSheet("findSheet");
-
-  speak(
-    "I remember your glasses. They were last seen on the desk beside your laptop."
-  );
-
-}
-
-
-function startLiveFind() {
-
-  closeSheet("findSheet");
-
-  document
-    .querySelector(".camera-section")
-    .scrollIntoView({
-      behavior: "smooth"
-    });
-
-  setTimeout(() => {
-
-    if(!cameraStream) {
-
-      toggleCamera();
-
-    }
-
-    showToast(
-      "ECHO is looking for your glasses."
+    (
+      memories.length === 1
+        ? " saved"
+        : " saved"
     );
 
-    setTimeout(() => {
 
-      const text =
-        "I found your glasses. They appear to be on the desk, slightly to your right.";
+  if(!memories.length) {
 
-      $("visionResponseText")
-        .textContent = text;
+    $("memoryPreview")
+      .innerHTML = `
 
-      $("visionResponse")
-        .classList.add("visible");
+        <div class="memory-empty">
 
-      lastResponse = text;
+          ECHO hasn't remembered anything yet.
 
-      speak(text);
+          <br>
 
-    }, 1800);
+          Capture something and say
+          <strong>“Remember this.”</strong>
 
-  }, 500);
+        </div>
 
-}
-
-
-/* =========================================================
-   READ / TRANSLATE
-========================================================= */
-
-function openReadMode() {
-
-  openSheet("readSheet");
-
-}
-
-
-function readDemo() {
-
-  $("readResult")
-    .classList.add("show");
-
-  $("readResultTitle")
-    .textContent =
-    "Laboratory Block";
-
-  $("readResultText")
-    .textContent =
-    "The visible sign says Laboratory Block. ECHO can read the detected information aloud.";
-
-  speak(
-    "The sign says Laboratory Block."
-  );
-
-  addHistory(
-    "ECHO",
-    "Read the visible text: Laboratory Block."
-  );
-
-}
-
-
-function translateDemo() {
-
-  $("readResult")
-    .classList.add("show");
-
-  $("readResultTitle")
-    .textContent =
-    "ஆய்வகப் பிரிவு";
-
-  $("readResultText")
-    .textContent =
-    "English → Tamil. In the full ECHO system, translation will use the detected text and the user's requested language.";
-
-  speak(
-    "ஆய்வகப் பிரிவு"
-  );
-
-  addHistory(
-    "ECHO",
-    "Translated visible text into Tamil."
-  );
-
-}
-
-
-/* =========================================================
-   GUIDE
-========================================================= */
-
-function openGuideMode() {
-
-  openSheet("guideSheet");
-
-}
-
-
-function startGuidance() {
-
-  speak(
-    "Starting voice guidance. Walk straight for approximately forty metres, then turn left."
-  );
-
-  showToast(
-    "Voice guidance started."
-  );
-
-  addHistory(
-    "ECHO",
-    "Started voice guidance to the library."
-  );
-
-}
-
-
-/* =========================================================
-   HISTORY
-========================================================= */
-
-function addHistory(role, text) {
-
-  history.unshift({
-
-    role,
-    text,
-
-    time:
-      new Date().toLocaleTimeString(
-        [],
-        {
-          hour: "numeric",
-          minute: "2-digit"
-        }
-      )
-
-  });
-
-
-  history =
-    history.slice(0, 30);
-
-  localStorage.setItem(
-    "echoHistory",
-    JSON.stringify(history)
-  );
-
-}
-
-
-function renderHistory() {
-
-  const list =
-    $("historyList");
-
-  if(history.length === 0) {
-
-    list.innerHTML = `
-      <div class="empty-state">
-        Your ECHO conversations will appear here.
-      </div>
-    `;
+      `;
 
     return;
 
   }
 
 
-  list.innerHTML =
-    history
-      .map(item => `
+  const memory =
+    memories[0];
 
-        <div class="history-item">
 
-          <div class="history-role">
-            ${escapeHtml(item.role)}
+  $("memoryPreview")
+    .innerHTML = `
+
+      <div class="memory-item">
+
+        <div class="memory-icon">
+          ${memory.icon}
+        </div>
+
+        <div class="memory-info">
+
+          <strong>
+            ${escapeHtml(
+              memory.title
+            )}
+          </strong>
+
+          <p>
+            ${escapeHtml(
+              memory.description
+            )}
+
             ·
-            ${escapeHtml(item.time)}
-          </div>
 
-          <div class="history-text">
-            ${escapeHtml(item.text)}
-          </div>
+            ${escapeHtml(
+              memory.time
+            )}
+          </p>
 
         </div>
 
-      `)
+        <div class="memory-badge">
+          LOCAL
+        </div>
+
+      </div>
+
+    `;
+
+}
+
+
+function renderMemoryList() {
+
+  if(!memories.length) {
+
+    $("memoryList")
+      .innerHTML = `
+
+        <div class="memory-empty">
+
+          No memories yet.
+
+          <br><br>
+
+          Start the camera,
+          capture a scene and press
+          <strong>REMEMBER</strong>.
+
+        </div>
+
+      `;
+
+    return;
+
+  }
+
+
+  $("memoryList")
+    .innerHTML =
+    memories
+      .map(
+        memory => `
+
+          <div class="memory-large">
+
+            <div class="memory-top">
+
+              <div class="memory-large-icon">
+                ${memory.icon}
+              </div>
+
+              <div class="memory-large-info">
+
+                <strong>
+                  ${escapeHtml(
+                    memory.title
+                  )}
+                </strong>
+
+                <p>
+                  ${escapeHtml(
+                    memory.description
+                  )}
+                </p>
+
+              </div>
+
+
+              <button
+                class="delete-memory"
+                onclick="deleteMemory(${memory.id})">
+
+                ×
+
+              </button>
+
+            </div>
+
+
+            <div class="memory-meta">
+
+              Seen:
+              ${escapeHtml(
+                memory.time
+              )}
+
+              <br>
+
+              Location:
+              ${escapeHtml(
+                memory.location
+              )}
+
+            </div>
+
+          </div>
+
+        `
+      )
       .join("");
 
 }
 
 
-function openHistoryMode() {
+function deleteMemory(
+  id
+) {
 
-  renderHistory();
+  memories =
+    memories.filter(
+      memory =>
+        memory.id !== id
+    );
 
-  openSheet("historySheet");
+
+  localStorage.setItem(
+    "echo_memories",
+    JSON.stringify(
+      memories
+    )
+  );
+
+
+  updateMemoryPreview();
+
+  renderMemoryList();
+
+  toast(
+    "Memory deleted."
+  );
 
 }
 
@@ -3564,134 +7024,164 @@ if(SpeechRecognition) {
   recognition =
     new SpeechRecognition();
 
+
   recognition.lang =
     "en-IN";
+
 
   recognition.continuous =
     false;
 
+
   recognition.interimResults =
     false;
+
 
   recognition.maxAlternatives =
     1;
 
 
-  recognition.onstart = function() {
+  recognition.onstart =
+    () => {
 
-    listening = true;
-
-    $("voiceButton")
-      .classList.add("listening");
-
-    $("voiceState")
-      .textContent =
-      "Listening… speak now";
-
-    $("voiceTranscript")
-      .textContent =
-      "I'm listening…";
-
-    $("systemStatus")
-      .textContent =
-      "LISTENING";
-
-  };
+      listening =
+        true;
 
 
-  recognition.onresult = function(event) {
-
-    const transcript =
-      event
-        .results[0][0]
-        .transcript
-        .trim();
+      $("voiceButton")
+        .classList
+        .add("listening");
 
 
-    $("voiceTranscript")
-      .textContent =
-      "“" +
-      transcript +
-      "”";
+      $("voiceStatus")
+        .textContent =
+        "Listening… speak now";
 
 
-    $("voiceState")
-      .textContent =
-      "ECHO understood";
+      $("voiceTranscript")
+        .textContent =
+        "I'm listening…";
 
 
-    handleVoiceCommand(
-      transcript
-    );
-
-  };
-
-
-  recognition.onerror = function(event) {
-
-    console.error(
-      "Speech recognition error:",
-      event.error
-    );
-
-
-    if(event.error === "not-allowed") {
-
-      showToast(
-        "Microphone permission was blocked."
+      setStatus(
+        "LISTENING",
+        "busy"
       );
 
-    }
+    };
 
-    else if(event.error === "no-speech") {
 
-      showToast(
-        "I didn't hear anything. Try again."
+  recognition.onresult =
+    event => {
+
+      const text =
+        event
+          .results[0][0]
+          .transcript
+          .trim();
+
+
+      $("voiceTranscript")
+        .textContent =
+        "“" +
+        text +
+        "”";
+
+
+      $("voiceStatus")
+        .textContent =
+        "ECHO heard you";
+
+
+      addHistory(
+        "YOU",
+        text
       );
 
-    }
 
-    else {
-
-      showToast(
-        "Voice recognition couldn't start."
+      handleCommand(
+        text
       );
 
-    }
-
-  };
+    };
 
 
-  recognition.onend = function() {
+  recognition.onerror =
+    event => {
 
-    listening = false;
+      console.error(
+        "Speech error:",
+        event.error
+      );
 
-    $("voiceButton")
-      .classList.remove("listening");
 
-    $("systemStatus")
-      .textContent =
-      "READY";
+      if(
+        event.error ===
+        "not-allowed"
+      ) {
 
-    $("voiceState")
-      .textContent =
-      "ECHO is ready to listen";
+        toast(
+          "Microphone permission was blocked."
+        );
 
-  };
+      }
+
+      else if(
+        event.error ===
+        "no-speech"
+      ) {
+
+        toast(
+          "I didn't hear anything."
+        );
+
+      }
+
+      else {
+
+        toast(
+          "Voice recognition failed."
+        );
+
+      }
+
+    };
+
+
+  recognition.onend =
+    () => {
+
+      listening =
+        false;
+
+
+      $("voiceButton")
+        .classList
+        .remove(
+          "listening"
+        );
+
+
+      $("voiceStatus")
+        .textContent =
+        "ECHO is ready to listen";
+
+
+      setStatus(
+        "READY"
+      );
+
+    };
 
 }
 
 
-/* =========================================================
-   START VOICE
-========================================================= */
-
-function startVoice() {
+function toggleVoice() {
 
   if(!recognition) {
 
-    showToast(
-      "Voice recognition isn't available in this browser. Try Chrome or Safari on a supported device."
+    toast(
+      "Voice recognition isn't supported here. Try Chrome."
     );
 
     return;
@@ -3710,16 +7200,15 @@ function startVoice() {
 
   try {
 
-    $("voiceResponse")
-      .classList.remove("visible");
-
     recognition.start();
 
   }
 
   catch(error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   }
 
@@ -3727,189 +7216,98 @@ function startVoice() {
 
 
 /* =========================================================
-   COMMAND ENGINE
+   VOICE COMMAND ENGINE
 ========================================================= */
 
-function handleVoiceCommand(command) {
+async function handleCommand(
+  command
+) {
 
   const text =
     command.toLowerCase();
 
 
-  addHistory(
-    "YOU",
-    command
-  );
-
-
-  /*
-    FIND / MEMORY
-  */
+  /* -----------------------------------------
+     WHAT IS THIS
+  ----------------------------------------- */
 
   if(
-    text.includes("where are my glasses") ||
-    text.includes("find my glasses") ||
-    text.includes("where is my glasses") ||
-    text.includes("find glasses")
+
+    text.includes(
+      "what is this"
+    ) ||
+
+    text.includes(
+      "what is that"
+    ) ||
+
+    text.includes(
+      "what am i looking at"
+    ) ||
+
+    text.includes(
+      "what is in front of me"
+    ) ||
+
+    text.includes(
+      "look around"
+    )
+
   ) {
 
-    const response =
-      "I last saw your glasses on the desk beside your laptop.";
-
-    respondToVoice(
-      response
-    );
+    await analyzeScene();
 
     return;
 
   }
 
 
+  /* -----------------------------------------
+     READ
+  ----------------------------------------- */
+
   if(
-    text.includes("remember my glasses") ||
-    text.includes("remember glasses")
+
+    text.includes(
+      "read this"
+    ) ||
+
+    text.includes(
+      "read that"
+    ) ||
+
+    text ===
+      "read it"
+
   ) {
 
-    const response =
-      "I've remembered your glasses. They were seen on the desk beside your laptop.";
-
-    respondToVoice(
-      response
-    );
+    await readCamera();
 
     return;
 
   }
 
 
-  /*
-    READ
-  */
+  /* -----------------------------------------
+     TRANSLATION
+  ----------------------------------------- */
 
   if(
-    text === "read this" ||
-    text.includes("read this") ||
-    text.includes("read it") ||
-    text.includes("read that")
+    text.includes(
+      "translate"
+    )
   ) {
 
-    const response =
-      "Point the camera at the text and I'll read it aloud.";
+    if(!lastOCRText) {
 
-    respondToVoice(
-      response
-    );
+      await readCamera();
 
-    return;
-
-  }
+    }
 
 
-  /*
-    TRANSLATION
-  */
+    if(lastOCRText) {
 
-  if(
-    text.includes("translate")
-  ) {
-
-    const response =
-      "Point the camera at the text and tell me which language you want.";
-
-    respondToVoice(
-      response
-    );
-
-    return;
-
-  }
-
-
-  /*
-    SURROUNDINGS
-  */
-
-  if(
-    text.includes("what is this") ||
-    text.includes("what is that") ||
-    text.includes("what am i looking at") ||
-    text.includes("what is in front of me") ||
-    text.includes("look around")
-  ) {
-
-    const response =
-      "Point the camera at the scene. I can analyse what is visible and describe the useful information.";
-
-    respondToVoice(
-      response
-    );
-
-    return;
-
-  }
-
-
-  /*
-    BUILDING / PLACE
-  */
-
-  if(
-    text.includes("what building") ||
-    text.includes("what place") ||
-    text.includes("where am i")
-  ) {
-
-    const response =
-      "Point the camera toward the building or sign. ECHO can combine visual and location context to identify useful information.";
-
-    respondToVoice(
-      response
-    );
-
-    return;
-
-  }
-
-
-  /*
-    NAVIGATION
-  */
-
-  if(
-    text.includes("take me") ||
-    text.includes("guide me") ||
-    text.includes("navigate") ||
-    text.includes("directions")
-  ) {
-
-    const response =
-      "Tell me your destination and I can provide simple voice guidance.";
-
-    respondToVoice(
-      response
-    );
-
-    return;
-
-  }
-
-
-  /*
-    CAMERA
-  */
-
-  if(
-    text.includes("open camera") ||
-    text.includes("start camera")
-  ) {
-
-    respondToVoice(
-      "Opening the camera."
-    );
-
-    if(!cameraStream) {
-
-      toggleCamera();
+      await translateOCR();
 
     }
 
@@ -3918,20 +7316,231 @@ function handleVoiceCommand(command) {
   }
 
 
-  /*
-    HELP
-  */
+  /* -----------------------------------------
+     WHERE AM I
+  ----------------------------------------- */
 
   if(
-    text.includes("what can you do") ||
-    text === "help"
+
+    text.includes(
+      "where am i"
+    ) ||
+
+    text.includes(
+      "my location"
+    ) ||
+
+    text.includes(
+      "what is my location"
+    )
+
   ) {
 
-    const response =
-      "I can help you understand what you see, remember important things, read information, translate visible text and provide voice guidance.";
+    openSheet(
+      "locationSheet"
+    );
 
-    respondToVoice(
-      response
+
+    locateMe();
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     GUIDE
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "guide me to"
+    ) ||
+
+    text.includes(
+      "take me to"
+    ) ||
+
+    text.includes(
+      "navigate to"
+    )
+
+  ) {
+
+    const destination =
+      extractDestination(
+        command
+      );
+
+
+    openSheet(
+      "guideSheet"
+    );
+
+
+    if(destination) {
+
+      $("destinationInput")
+        .value =
+        destination;
+
+
+      await buildRoute();
+
+    }
+
+    else {
+
+      respond(
+        "Tell me the destination you want to reach."
+      );
+
+    }
+
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     REMEMBER
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "remember this"
+    ) ||
+
+    text.includes(
+      "remember that"
+    )
+
+  ) {
+
+    if(!cameraStream) {
+
+      await toggleCamera();
+
+    }
+
+
+    if(cameraStream) {
+
+      captureFrame();
+
+      rememberScene();
+
+    }
+
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     FIND
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "find my"
+    )
+
+  ) {
+
+    const target =
+      command
+        .replace(
+          /find my/i,
+          ""
+        )
+        .trim();
+
+
+    await findObject(
+      target
+    );
+
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     OPEN CAMERA
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "open camera"
+    ) ||
+
+    text.includes(
+      "start camera"
+    )
+
+  ) {
+
+    await toggleCamera();
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     IDENTIFY PLACE
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "what building"
+    ) ||
+
+    text.includes(
+      "what place is this"
+    ) ||
+
+    text.includes(
+      "identify this place"
+    )
+
+  ) {
+
+    await identifyPlace();
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     HELP
+  ----------------------------------------- */
+
+  if(
+
+    text.includes(
+      "what can you do"
+    ) ||
+
+    text ===
+      "help"
+
+  ) {
+
+    respond(
+
+      "I can understand objects from the camera, read text, translate it, remember visual observations, find remembered objects, tell you your location and create routes."
+
     );
 
     return;
@@ -3939,42 +7548,209 @@ function handleVoiceCommand(command) {
   }
 
 
-  /*
-    FALLBACK
-  */
+  /* -----------------------------------------
+     FALLBACK
+  ----------------------------------------- */
 
-  respondToVoice(
-    "I heard you. In the full ECHO system, my context engine will understand your request and choose the right assistance."
+  respond(
+
+    "I heard you say " +
+    command +
+    ". Try asking me what you see, asking me to read something, asking where you are, or telling me to guide you somewhere."
+
   );
 
 }
 
 
 /* =========================================================
-   VOICE RESPONSE
+   FIND OBJECT
 ========================================================= */
 
-function respondToVoice(text) {
+async function findObject(
+  target
+) {
+
+  if(!target) {
+
+    respond(
+      "Tell me what you want me to find."
+    );
+
+    return;
+
+  }
+
+
+  const normalized =
+    target.toLowerCase();
+
+
+  const memory =
+    memories.find(
+      item =>
+        item.title
+          .toLowerCase()
+          .includes(
+            normalized
+          ) ||
+
+        item.description
+          .toLowerCase()
+          .includes(
+            normalized
+          )
+    );
+
+
+  if(memory) {
+
+    respond(
+
+      "I remember " +
+      target +
+      ". It was last recorded at " +
+      memory.location +
+      ". I'll check the live camera now."
+
+    );
+
+
+    if(!cameraStream) {
+
+      await toggleCamera();
+
+    }
+
+
+    if(cameraStream) {
+
+      const model =
+        await loadDetector();
+
+
+      if(model) {
+
+        const predictions =
+          await model.detect(
+            $("video"),
+            20
+          );
+
+
+        const matches =
+          predictions.filter(
+            item =>
+              item.score >= .45 &&
+              item.class
+                .toLowerCase()
+                .includes(
+                  normalized
+                )
+          );
+
+
+        if(matches.length) {
+
+          respond(
+
+            "I can see a " +
+            target +
+            " in the current camera view."
+
+          );
+
+        }
+
+        else {
+
+          respond(
+
+            "I remember where it was, but I can't confidently see it in the current camera view yet."
+
+          );
+
+        }
+
+      }
+
+    }
+
+
+    return;
+
+  }
+
+
+  const known =
+    memories
+      .map(
+        memory =>
+          memory.title
+      )
+      .join(", ");
+
+
+  respond(
+
+    "I don't have a saved visual memory for " +
+    target +
+    "." +
+    (
+      known
+        ? " Your saved memories include " +
+          known +
+          "."
+        : ""
+    )
+
+  );
+
+}
+
+
+/* =========================================================
+   RESPONSE
+========================================================= */
+
+function respond(
+  text
+) {
+
+  showVoiceResponse(
+    text
+  );
+
+  speak(
+    text
+  );
+
+}
+
+
+function showVoiceResponse(
+  text
+) {
 
   $("voiceResponseText")
-    .textContent = text;
+    .textContent =
+    text;
+
 
   $("voiceResponse")
-    .classList.add("visible");
+    .classList
+    .add("show");
 
-  lastResponse = text;
 
   addHistory(
     "ECHO",
     text
   );
 
-  speak(text);
-
 }
 
 
-function speakVoiceResponse() {
+function repeatResponse() {
 
   speak(
     $("voiceResponseText")
@@ -3984,21 +7760,26 @@ function speakVoiceResponse() {
 }
 
 
-function speakCurrentResponse() {
+function speakVisionResult() {
 
-  speak(
-    $("visionResponseText")
-      .textContent
-  );
+  if(lastVisionText) {
+
+    speak(
+      lastVisionText
+    );
+
+  }
 
 }
 
 
 /* =========================================================
-   SPEECH SYNTHESIS
+   SPEECH OUTPUT
 ========================================================= */
 
-function speak(text) {
+function speak(
+  text
+) {
 
   if(
     !("speechSynthesis" in window)
@@ -4021,8 +7802,10 @@ function speak(text) {
   utterance.lang =
     "en-IN";
 
+
   utterance.rate =
     .9;
+
 
   utterance.pitch =
     1;
@@ -4036,20 +7819,236 @@ function speak(text) {
 
 
 /* =========================================================
+   HISTORY
+========================================================= */
+
+function addHistory(
+  role,
+  text
+) {
+
+  history.unshift({
+
+    role,
+
+    text,
+
+    time:
+      new Date()
+        .toLocaleTimeString(
+          [],
+          {
+            hour:
+              "numeric",
+
+            minute:
+              "2-digit"
+          }
+        )
+
+  });
+
+
+  history =
+    history.slice(
+      0,
+      50
+    );
+
+
+  localStorage.setItem(
+    "echo_history",
+    JSON.stringify(
+      history
+    )
+  );
+
+}
+
+
+function renderHistory() {
+
+  if(!history.length) {
+
+    $("historyList")
+      .innerHTML = `
+
+        <div class="memory-empty">
+
+          Your real ECHO interactions
+          will appear here.
+
+        </div>
+
+      `;
+
+    return;
+
+  }
+
+
+  $("historyList")
+    .innerHTML =
+    history
+      .map(
+        item => `
+
+          <div class="history-item">
+
+            <div class="history-role">
+
+              ${escapeHtml(
+                item.role
+              )}
+
+            </div>
+
+            <div class="history-text">
+
+              ${escapeHtml(
+                item.text
+              )}
+
+            </div>
+
+            <div class="history-time">
+
+              ${escapeHtml(
+                item.time
+              )}
+
+            </div>
+
+          </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   SHEET OPENERS
+========================================================= */
+
+function openVisionSheet() {
+
+  openSheet(
+    "visionSheet"
+  );
+
+}
+
+
+function activateVision() {
+
+  closeSheet(
+    "visionSheet"
+  );
+
+
+  document
+    .querySelector(
+      ".camera-card"
+    )
+    .scrollIntoView({
+      behavior:
+        "smooth"
+    });
+
+
+  setTimeout(
+    async () => {
+
+      if(!cameraStream) {
+
+        await toggleCamera();
+
+      }
+
+
+      if(cameraStream) {
+
+        await startLiveDetection();
+
+      }
+
+    },
+    400
+  );
+
+}
+
+
+function openMemorySheet() {
+
+  renderMemoryList();
+
+  openSheet(
+    "memorySheet"
+  );
+
+}
+
+
+function openReadSheet() {
+
+  openSheet(
+    "readSheet"
+  );
+
+}
+
+
+function openLocationSheet() {
+
+  openSheet(
+    "locationSheet"
+  );
+
+}
+
+
+function openGuideSheet() {
+
+  openSheet(
+    "guideSheet"
+  );
+
+}
+
+
+function openHistorySheet() {
+
+  renderHistory();
+
+  openSheet(
+    "historySheet"
+  );
+
+}
+
+
+/* =========================================================
    NAVIGATION
 ========================================================= */
 
-function setNav(button) {
+function setActiveNav(
+  button
+) {
 
   document
-    .querySelectorAll(".nav-button")
-    .forEach(item => {
-
-      item.classList.remove(
-        "active"
-      );
-
-    });
+    .querySelectorAll(
+      ".nav"
+    )
+    .forEach(
+      item =>
+        item.classList
+          .remove(
+            "active"
+          )
+    );
 
 
   button.classList.add(
@@ -4059,15 +8058,22 @@ function setNav(button) {
 }
 
 
-function goHome(button) {
+function goHome(
+  button
+) {
 
-  setNav(button);
+  setActiveNav(
+    button
+  );
+
 
   window.scrollTo({
 
-    top: 0,
+    top:
+      0,
 
-    behavior: "smooth"
+    behavior:
+      "smooth"
 
   });
 
@@ -4075,22 +8081,101 @@ function goHome(button) {
 
 
 /* =========================================================
-   HTML SAFETY
+   UTILITIES
 ========================================================= */
 
-function escapeHtml(value) {
+function sleep(
+  ms
+) {
 
-  return String(value)
+  return new Promise(
+    resolve =>
+      setTimeout(
+        resolve,
+        ms
+      )
+  );
 
-    .replaceAll("&", "&amp;")
+}
 
-    .replaceAll("<", "&lt;")
 
-    .replaceAll(">", "&gt;")
+function extractDestination(
+  command
+) {
 
-    .replaceAll('"', "&quot;")
+  const patterns = [
 
-    .replaceAll("'", "&#039;");
+    /guide me to (.+)/i,
+
+    /take me to (.+)/i,
+
+    /navigate to (.+)/i
+
+  ];
+
+
+  for(
+    const pattern of patterns
+  ) {
+
+    const match =
+      command.match(
+        pattern
+      );
+
+
+    if(match) {
+
+      return match[1]
+        .trim()
+        .replace(
+          /please$/i,
+          ""
+        )
+        .trim();
+
+    }
+
+  }
+
+
+  return "";
+
+}
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value
+  )
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 
 }
 
@@ -4103,8 +8188,7 @@ updateMemoryPreview();
 
 
 /* =========================================================
-   KEYBOARD SHORTCUT
-   Space = voice
+   KEYBOARD VOICE SHORTCUT
 ========================================================= */
 
 document.addEventListener(
@@ -4112,14 +8196,21 @@ document.addEventListener(
   event => {
 
     if(
-      event.code === "Space" &&
-      event.target.tagName !== "INPUT" &&
-      event.target.tagName !== "TEXTAREA"
+
+      event.code ===
+      "Space" &&
+
+      event.target.tagName !==
+      "INPUT" &&
+
+      event.target.tagName !==
+      "TEXTAREA"
+
     ) {
 
       event.preventDefault();
 
-      startVoice();
+      toggleVoice();
 
     }
 
@@ -4140,8 +8231,16 @@ window.addEventListener(
       cameraStream
         .getTracks()
         .forEach(
-          track => track.stop()
+          track =>
+            track.stop()
         );
+
+    }
+
+    if(tesseractWorker) {
+
+      tesseractWorker
+        .terminate();
 
     }
 
@@ -4151,4 +8250,5 @@ window.addEventListener(
 </script>
 
 </body>
+
 </html>
